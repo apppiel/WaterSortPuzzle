@@ -4,11 +4,9 @@ using WaterSortPuzzle.Core;
 
 namespace WaterSortPuzzle.Game
 {
-    /// <summary>
-    /// 튜브 하나의 시각적 표현을 담당하는 MonoBehaviour.
-    /// Core의 Tube 데이터를 읽어 화면에 색 세그먼트를 렌더링한다.
-    /// 게임 로직은 없고 표현만 한다.
-    /// </summary>
+    // 튜브 하나의 시각적 표현을 담당하는 MonoBehaviour.
+    // Core의 Tube 데이터를 읽어 화면에 색 세그먼트를 렌더링한다.
+    // 게임 로직은 없고 표현만 한다.
     public class TubeView : MonoBehaviour
     {
         // Core 데이터: 이 뷰가 표현하는 튜브
@@ -32,15 +30,13 @@ namespace WaterSortPuzzle.Game
         // 선택됐을 때 배경 색 (노란색)
         private static readonly Color BackgroundSelected = new(1f, 0.9f, 0.2f, 0.8f);
 
-        /// <summary>
-        /// 튜브 뷰를 초기화한다. GameManager가 Start()에서 호출한다.
-        /// </summary>
-        /// <param name="index">튜브 인덱스 (클릭 감지용)</param>
-        /// <param name="tube">Core 튜브 데이터</param>
-        /// <param name="palette">ColorId → Color 팔레트 배열</param>
-        /// <param name="square">1x1 흰색 스프라이트 (색 입혀서 사각형으로 사용)</param>
-        /// <param name="segmentSize">세그먼트 한 칸의 월드 유닛 크기</param>
-        /// <param name="onClicked">튜브 클릭 시 호출할 콜백</param>
+        // 튜브 뷰를 초기화한다. GameManager가 Start()에서 호출한다.
+        // index: 튜브 인덱스 (클릭 감지용)
+        // tube: Core 튜브 데이터
+        // palette: ColorId → Color 팔레트 배열
+        // square: 1x1 흰색 스프라이트 (색 입혀서 사각형으로 사용)
+        // segmentSize: 세그먼트 한 칸의 월드 유닛 크기
+        // onClicked: 튜브 클릭 시 호출할 콜백
         public void Init(int index, Tube tube, Color[] palette, Sprite square, float segmentSize, Action<int> onClicked)
         {
             _tube = tube;
@@ -95,10 +91,8 @@ namespace WaterSortPuzzle.Game
             Refresh();
         }
 
-        /// <summary>
-        /// Core Tube 데이터를 읽어 각 슬롯의 색을 업데이트한다.
-        /// Pour나 Undo 후에 GameManager가 호출한다.
-        /// </summary>
+        // Core Tube 데이터를 읽어 각 슬롯의 색을 업데이트한다.
+        // Pour나 Undo 후에 GameManager가 호출한다.
         public void Refresh()
         {
             for (int i = 0; i < _slots.Length; i++)
@@ -110,10 +104,8 @@ namespace WaterSortPuzzle.Game
             }
         }
 
-        /// <summary>
-        /// 선택 상태를 시각적으로 표시한다.
-        /// selected=true면 배경을 노랗게, false면 원래 색으로.
-        /// </summary>
+        // 선택 상태를 시각적으로 표시한다.
+        // selected=true면 배경을 노랗게, false면 원래 색으로.
         public void SetSelected(bool selected)
         {
             _background.color = selected ? BackgroundSelected : BackgroundNormal;

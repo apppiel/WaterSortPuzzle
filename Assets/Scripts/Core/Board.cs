@@ -3,10 +3,8 @@ using System.Collections.Generic;
 
 namespace WaterSortPuzzle.Core
 {
-    /// <summary>
-    /// 현재 게임 상태를 나타낸다.
-    /// 튜브 집합을 보유하고, 붓기(TryPour)와 되돌리기(TryUndo)를 담당한다.
-    /// </summary>
+    // 현재 게임 상태를 나타내는 클래스.
+    // 튜브 집합을 보유하고, 붓기(TryPour)와 되돌리기(TryUndo)를 담당한다.
     public class Board
     {
         // 모든 튜브 배열
@@ -15,10 +13,10 @@ namespace WaterSortPuzzle.Core
         // Undo를 위한 이동 히스토리 스택 (가장 최근 이동이 top)
         private readonly Stack<Move> _history = new();
 
-        /// <summary>튜브 수</summary>
+        // 튜브 수
         public int TubeCount => _tubes.Length;
 
-        /// <summary>되돌릴 수 있는 이동이 있으면 true</summary>
+        // 되돌릴 수 있는 이동이 있으면 true
         public bool CanUndo => _history.Count > 0;
 
         public Board(Tube[] tubes)
@@ -28,14 +26,12 @@ namespace WaterSortPuzzle.Core
             _tubes = tubes;
         }
 
-        /// <summary>인덱스로 튜브를 가져온다.</summary>
+        // 인덱스로 튜브를 가져온다.
         public Tube GetTube(int index) => _tubes[index];
 
-        /// <summary>
-        /// from 튜브에서 to 튜브로 물을 붓는다.
-        /// 규칙을 검증하고, 이동 가능하면 세그먼트를 옮기고 옮긴 수를 반환.
-        /// 이동 불가 시 0 반환.
-        /// </summary>
+        // from 튜브에서 to 튜브로 물을 붓는다.
+        // 규칙을 검증하고, 이동 가능하면 세그먼트를 옮기고 옮긴 수를 반환.
+        // 이동 불가 시 0 반환.
         public int TryPour(int from, int to)
         {
             // 같은 튜브는 이동 불가
@@ -67,10 +63,7 @@ namespace WaterSortPuzzle.Core
             return count;
         }
 
-        /// <summary>
-        /// 마지막 이동을 되돌린다.
-        /// 히스토리가 없으면 false 반환.
-        /// </summary>
+        // 마지막 이동을 되돌린다. 히스토리가 없으면 false 반환.
         public bool TryUndo()
         {
             if (!CanUndo) return false;

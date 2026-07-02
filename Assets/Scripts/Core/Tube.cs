@@ -2,11 +2,9 @@ using System;
 
 namespace WaterSortPuzzle.Core
 {
-    /// <summary>
-    /// 튜브 하나를 나타낸다.
-    /// 세그먼트(색 조각)를 아래부터 쌓는 스택 구조.
-    /// ColorId(정수)로 색을 표현하고, UnityEngine을 참조하지 않는 순수 C# 클래스.
-    /// </summary>
+    // 튜브 하나를 나타내는 클래스.
+    // 세그먼트(색 조각)를 아래부터 쌓는 스택 구조.
+    // ColorId(정수)로 색을 표현하고, UnityEngine을 참조하지 않는 순수 C#.
     public class Tube
     {
         // 세그먼트를 저장하는 배열. index 0 = 가장 아래, index Count-1 = 가장 위
@@ -15,30 +13,26 @@ namespace WaterSortPuzzle.Core
         // 현재 쌓인 세그먼트 수
         private int _count;
 
-        /// <summary>튜브의 최대 수용 칸 수</summary>
+        // 튜브의 최대 수용 칸 수
         public int Capacity { get; }
 
-        /// <summary>현재 쌓인 세그먼트 수</summary>
+        // 현재 쌓인 세그먼트 수
         public int Count => _count;
 
-        /// <summary>비어 있으면 true</summary>
+        // 비어 있으면 true
         public bool IsEmpty => _count == 0;
 
-        /// <summary>꽉 찼으면 true</summary>
+        // 꽉 찼으면 true
         public bool IsFull => _count == Capacity;
 
-        /// <summary>남은 빈 칸 수</summary>
+        // 남은 빈 칸 수
         public int FreeSpace => Capacity - _count;
 
-        /// <summary>
-        /// 맨 위 세그먼트의 ColorId. 비어 있으면 -1 반환.
-        /// </summary>
+        // 맨 위 세그먼트의 ColorId. 비어 있으면 -1 반환.
         public int TopColor => _count > 0 ? _segments[_count - 1] : -1;
 
-        /// <summary>
-        /// 맨 위부터 연속으로 같은 색인 세그먼트 수.
-        /// 예) [R, G, G, G] → 3
-        /// </summary>
+        // 맨 위부터 연속으로 같은 색인 세그먼트 수.
+        // 예) [R, G, G, G] → 3
         public int TopRunLength
         {
             get
@@ -56,13 +50,10 @@ namespace WaterSortPuzzle.Core
             }
         }
 
-        /// <summary>
-        /// 클리어 상태인지 확인.
-        /// 꽉 차 있고 전부 같은 색이면 true.
-        /// </summary>
+        // 클리어 상태인지 확인. 꽉 차 있고 전부 같은 색이면 true.
         public bool IsComplete => IsFull && TopRunLength == Capacity;
 
-        /// <summary>빈 튜브를 만든다.</summary>
+        // 빈 튜브를 만든다.
         public Tube(int capacity)
         {
             if (capacity <= 0) throw new ArgumentOutOfRangeException(nameof(capacity));
@@ -70,10 +61,8 @@ namespace WaterSortPuzzle.Core
             _segments = new int[capacity];
         }
 
-        /// <summary>
-        /// 초기 세그먼트가 채워진 튜브를 만든다.
-        /// bottomToTop: index 0이 가장 아래 세그먼트.
-        /// </summary>
+        // 초기 세그먼트가 채워진 튜브를 만든다.
+        // bottomToTop: index 0이 가장 아래 세그먼트.
         public Tube(int capacity, int[] bottomToTop) : this(capacity)
         {
             if (bottomToTop.Length > capacity)
@@ -85,19 +74,17 @@ namespace WaterSortPuzzle.Core
             _count = bottomToTop.Length;
         }
 
-        /// <summary>
-        /// 이 튜브가 해당 색을 받을 수 있는지 확인.
-        /// 비어 있거나, 맨 위 색이 같고 자리가 있으면 true.
-        /// </summary>
+        // 이 튜브가 해당 색을 받을 수 있는지 확인.
+        // 비어 있거나, 맨 위 색이 같고 자리가 있으면 true.
         public bool CanAccept(int color) => !IsFull && (IsEmpty || TopColor == color);
 
-        /// <summary>index 위치의 세그먼트 ColorId를 반환한다. (0 = 가장 아래)</summary>
+        // index 위치의 세그먼트 ColorId를 반환한다. (0 = 가장 아래)
         public int GetSegment(int index) => _segments[index];
 
-        /// <summary>맨 위에 색을 추가한다. (Board에서만 호출)</summary>
+        // 맨 위에 색을 추가한다. (Board에서만 호출)
         internal void Push(int color) => _segments[_count++] = color;
 
-        /// <summary>맨 위 색을 꺼내어 반환한다. (Board에서만 호출)</summary>
+        // 맨 위 색을 꺼내어 반환한다. (Board에서만 호출)
         internal int Pop() => _segments[--_count];
     }
 }

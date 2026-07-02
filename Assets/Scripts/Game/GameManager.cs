@@ -5,11 +5,9 @@ using WaterSortPuzzle.Data;
 
 namespace WaterSortPuzzle.Game
 {
-    /// <summary>
-    /// 게임 전체 흐름을 제어하는 MonoBehaviour.
-    /// LevelData를 읽어 Board(게임 상태)와 TubeView(화면)를 만들고,
-    /// 입력을 받아 Pour/Undo를 실행하고, 승리를 감지한다.
-    /// </summary>
+    // 게임 전체 흐름을 제어하는 MonoBehaviour.
+    // LevelData를 읽어 Board(게임 상태)와 TubeView(화면)를 만들고,
+    // 입력을 받아 Pour/Undo를 실행하고, 승리를 감지한다.
     public class GameManager : MonoBehaviour
     {
         // 인스펙터에서 드래그로 연결하는 레벨 데이터
@@ -33,10 +31,7 @@ namespace WaterSortPuzzle.Game
         // 튜브 사이 간격 (월드 유닛)
         private const float TubeSpacing = 0.8f;
 
-        /// <summary>
-        /// 씬 시작 시 한 번 호출된다.
-        /// LevelData로 Board와 TubeView를 생성한다.
-        /// </summary>
+        // 씬 시작 시 한 번 호출된다. LevelData로 Board와 TubeView를 생성한다.
         private void Start()
         {
             var tubes = BuildTubes();       // Core 데이터 생성
@@ -44,10 +39,7 @@ namespace WaterSortPuzzle.Game
             _tubeViews = BuildViews(tubes); // 화면 오브젝트 생성
         }
 
-        /// <summary>
-        /// 매 프레임 호출된다.
-        /// 마우스 클릭과 키보드 입력을 처리한다.
-        /// </summary>
+        // 매 프레임 호출된다. 마우스 클릭과 키보드 입력을 처리한다.
         private void Update()
         {
             // 클리어 후에는 입력 무시
@@ -75,10 +67,8 @@ namespace WaterSortPuzzle.Game
                 HandleUndo();
         }
 
-        /// <summary>
-        /// 튜브 클릭 시 호출된다.
-        /// 첫 클릭: 튜브 선택 / 두 번째 클릭: 붓기 시도 / 같은 튜브 재클릭: 선택 해제
-        /// </summary>
+        // 튜브 클릭 시 호출된다.
+        // 첫 클릭: 튜브 선택 / 두 번째 클릭: 붓기 시도 / 같은 튜브 재클릭: 선택 해제
         private void HandleTubeClicked(int index)
         {
             if (_selectedIndex == -1)
@@ -120,10 +110,7 @@ namespace WaterSortPuzzle.Game
             }
         }
 
-        /// <summary>
-        /// Z 키 입력 시 호출된다.
-        /// Board의 마지막 이동을 되돌리고 모든 뷰를 갱신한다.
-        /// </summary>
+        // Z 키 입력 시 호출된다. Board의 마지막 이동을 되돌리고 모든 뷰를 갱신한다.
         private void HandleUndo()
         {
             if (!_board.TryUndo()) return;
@@ -133,11 +120,7 @@ namespace WaterSortPuzzle.Game
                 view.Refresh();
         }
 
-        // ── 초기화 헬퍼 ──────────────────────────────────────────
-
-        /// <summary>
-        /// LevelData의 TubeInitData 배열을 읽어 Core Tube 배열을 만든다.
-        /// </summary>
+        // LevelData의 TubeInitData 배열을 읽어 Core Tube 배열을 만든다.
         private Tube[] BuildTubes()
         {
             var tubes = new Tube[levelData.tubes.Length];
@@ -150,9 +133,7 @@ namespace WaterSortPuzzle.Game
             return tubes;
         }
 
-        /// <summary>
-        /// Tube 배열로 TubeView 오브젝트를 생성하고 화면 중앙에 배치한다.
-        /// </summary>
+        // Tube 배열로 TubeView 오브젝트를 생성하고 화면 중앙에 배치한다.
         private TubeView[] BuildViews(Tube[] tubes)
         {
             Sprite square = CreateSquareSprite(); // 프로그래매틱 1x1 흰색 스프라이트
@@ -179,19 +160,17 @@ namespace WaterSortPuzzle.Game
             return views;
         }
 
-        /// <summary>
-        /// 1x1 흰색 Sprite를 코드로 생성한다.
-        /// SpriteRenderer.color로 색을 입힐 수 있어서 에셋 없이 색 사각형을 만들 수 있다.
-        /// </summary>
+        // 1x1 흰색 Sprite를 코드로 생성한다.
+        // SpriteRenderer.color로 색을 입힐 수 있어서 에셋 없이 색 사각형을 만들 수 있다.
         private static Sprite CreateSquareSprite()
         {
             var tex = new Texture2D(1, 1);
             tex.SetPixel(0, 0, Color.white); // 픽셀 하나를 흰색으로
             tex.Apply();                      // GPU에 업로드
-            return Sprite.Create(tex, new Rect(0, 0, 1, 1), new Vector2(0.5f, 0.5f), 1f);
-            // Rect(0,0,1,1): 텍스처 전체 영역
+            // Rect(0,0,1,1): 텍스처 전체 영역 사용
             // Vector2(0.5, 0.5): 피벗(기준점)을 중앙으로
             // 1f: Pixels Per Unit = 1 (1픽셀 = 1월드유닛)
+            return Sprite.Create(tex, new Rect(0, 0, 1, 1), new Vector2(0.5f, 0.5f), 1f);
         }
     }
 }
