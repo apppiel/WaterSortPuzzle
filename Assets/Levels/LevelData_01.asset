@@ -13,5 +13,13 @@ MonoBehaviour:
   m_Name: LevelData_01
   m_EditorClassIdentifier: WaterSortPuzzle.Data::WaterSortPuzzle.Data.LevelData
   tubeCapacity: 4
-  palette: []
-  tubes: []
+  palette:
+  - {r: 0.9372549, g: 0.26666668, b: 0.26666668, a: 1}
+  - {r: 0.23137255, g: 0.50980395, b: 0.9647059, a: 1}
+  - {r: 0.98039216, g: 0.8, b: 0.08235294, a: 1}
+  tubes:
+  - segments: 00000000010000000200000000000000
+  - segments: 01000000020000000000000001000000
+  - segments: 02000000000000000100000002000000
+  - segments: 
+  - segments: 
