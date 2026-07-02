@@ -58,23 +58,31 @@ Core는 별도 assembly definition(`WaterSortPuzzle.Core.asmdef`)으로 둔다.
 UnityEngine을 참조하지 않으므로, 컴파일러가 경계를 강제한다.
 
 ### Game (MonoBehaviour)
-- `GameManager` : Board를 소유하고 흐름 제어(레벨 로드 → 입력→Pour → 승리 처리)
+- `GameManager` : Board를 소유하고 흐름 제어(레벨 로드 → 입력→Pour → 승리 처리). 인스펙터 필드: `levelData`, `tubeSprite`, `koreanFont`
 - `TubeView` : 튜브 하나를 렌더링하고 붓기 애니메이션 재생. Core `Tube`를 읽어 표현만 한다.
-- `InputHandler` : 탭/클릭으로 튜브 선택 → GameManager에 전달
+- `ClearPopup` : 클리어 시 팝업 UI. Canvas를 코드로 생성. DOTween으로 오버레이 페이드 인 → 패널 스케일 인(OutBack) → 타이틀 펀치 순서로 연출.
+- `TubeClickTarget` : Physics2D 클릭 감지용 컴포넌트
 
 ### Data
 - `LevelData` (ScriptableObject) : 튜브 개수, 튜브 용량, 각 튜브의 초기 세그먼트 배열, 색 팔레트
 - 레벨 에셋은 `Assets/Levels/` 에 저장
 
+## 브랜드 컬러
+
+- 라이트 핑크: `#FFC2C2` (RGB 1f, 0.761f, 0.761f)
+- 딥 핑크: `#FF8A8A` (RGB 1f, 0.541f, 0.541f)
+- UI 포인트 컬러로 사용. 메인 버튼은 딥 핑크, 보조 버튼은 라이트 핑크.
+
 ## 주석 규칙
 
 **프로젝트 전체에 한국어 주석을 달아야 한다.** 작성자가 Unity 초보라 코드를 읽으며 배운다.
 
-- 클래스 상단: `/// <summary>` XML 문서 주석으로 역할 설명
-- 메서드 상단: `/// <summary>` 로 무엇을 하는지 한 줄 설명
+- 클래스 상단: `//` 로 역할 설명
+- 메서드 상단: `//` 로 무엇을 하는지 한 줄 설명
 - 주요 필드/프로퍼티: 옆에 `// 설명` 인라인 주석
 - 비직관적인 로직: 줄 위 또는 옆에 `// 이유/의미` 설명
 - 새 파일 작성 시, 기존 파일 수정 시 모두 주석 포함
+- XML `/// <summary>` 사용 금지. 일반 `//` 주석만 사용.
 
 ## 코딩 컨벤션
 
@@ -115,23 +123,25 @@ UnityEngine을 참조하지 않으므로, 컴파일러가 경계를 강제한다
 - [x] `Core/Move` — Undo용 이동 기록 struct
 - [x] `Tests/EditMode` — TubeTests, BoardTests, WinCheckerTests (전부 통과)
 - [x] `Data/LevelData` — ScriptableObject (튜브 수, 용량, 팔레트, 초기 세그먼트)
-- [x] `Game/TubeView` — 색 세그먼트 렌더링, 선택 하이라이트
-- [x] `Game/GameManager` — 레벨 로드, 클릭 입력, Pour 실행, Undo(Z키), 승리 감지
+- [x] `Game/TubeView` — 색 세그먼트 렌더링, 선택 하이라이트, 클리어 바운스 애니메이션
+- [x] `Game/GameManager` — 레벨 로드, 클릭 입력, Pour 실행, Undo, 승리 감지, ClearPopup 연동
+- [x] `Game/ClearPopup` — 클리어 팝업 (오버레이 + 패널 스케일 인 + 타이틀 펀치)
+- [x] 붓기 애니메이션 (DOTween 포물선 궤적)
+- [x] HUD Undo 버튼 (에디터에서 생성, GameManager.HandleUndo() 연결)
+- [x] 한글 폰트 — NanumSquareRoundEB SDF (`Assets/TextMesh Pro/Fonts/`)
+- [x] 튜브 스프라이트 — Frame 1.png (`Assets/Sprites/`)
 - [x] 프로토타입 플레이 가능 (클리어 확인)
 
 ### TODO
 
 #### 비주얼 / UX
-- [ ] 붓기 애니메이션 (세그먼트가 이동하는 연출)
 - [ ] 튜브 선택 시 살짝 위로 올라오는 연출
-- [ ] 클리어 연출 (파티클, 팝업 등)
-- [ ] 튜브 모양 개선 (현재 사각형 → 실제 물병 스프라이트)
+- [ ] 튜브 스프라이트 개선 (현재 Figma 임시 에셋)
 - [ ] 색 세그먼트를 물처럼 보이는 비주얼로 교체
 
 #### UI
 - [ ] 메인 메뉴 씬
-- [ ] HUD (이동 횟수, Undo 버튼, 레벨 번호)
-- [ ] 클리어 팝업 (다음 레벨 버튼)
+- [ ] HUD 이동 횟수 카운트 표시
 - [ ] 설정 메뉴 (사운드 등)
 - [ ] Safe Area 대응 (노치/홈 인디케이터)
 
@@ -143,10 +153,11 @@ UnityEngine을 참조하지 않으므로, 컴파일러가 경계를 강제한다
 #### 게임플레이
 - [ ] 힌트 기능
 - [ ] 이동 횟수 카운트
-- [ ] 레벨 리셋 (초기 상태로 되돌리기)
+- [ ] 레벨 리셋 버튼 (초기 상태로 되돌리기)
+- [ ] 다음 레벨 씬 전환 (현재 클리어 팝업 양쪽 버튼 모두 씬 재로드)
 
 #### 기술
-- [ ] 씬 전환 (메인 → 게임 → 클리어)
+- [ ] 씬 전환 시스템 (메인 → 게임 → 클리어)
 - [ ] 사운드 (붓기 효과음, BGM)
 - [ ] 모바일 빌드 설정 (Android / iOS)
 - [ ] 터치 입력 대응 (현재 마우스 전용)
