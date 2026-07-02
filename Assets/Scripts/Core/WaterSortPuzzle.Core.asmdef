@@ -1,0 +1,14 @@
+{
+    "name": "WaterSortPuzzle.Core",
+    "rootNamespace": "WaterSortPuzzle.Core",
+    "references": [],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": true,
+    "precompiledReferences": [],
+    "autoReferenced": false,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": true
+}
