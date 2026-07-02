@@ -45,7 +45,7 @@ namespace WaterSortPuzzle.Game
             // 클리어 후에는 입력 무시
             if (_gameOver) return;
 
-            // 마우스가 없는 환경(모바일 등)에서는 스킵
+            // 마우스가 없으면 스킵 (에디터 전용 코드. 모바일에서는 터치로 대체 예정)
             if (Mouse.current == null) return;
 
             // 마우스 왼쪽 버튼을 이번 프레임에 눌렀을 때
@@ -62,9 +62,6 @@ namespace WaterSortPuzzle.Game
                     HandleTubeClicked(target.TubeIndex);
             }
 
-            // Z 키: Undo
-            if (Keyboard.current != null && Keyboard.current.zKey.wasPressedThisFrame)
-                HandleUndo();
         }
 
         // 튜브 클릭 시 호출된다.
@@ -110,8 +107,8 @@ namespace WaterSortPuzzle.Game
             }
         }
 
-        // Z 키 입력 시 호출된다. Board의 마지막 이동을 되돌리고 모든 뷰를 갱신한다.
-        private void HandleUndo()
+        // HUD의 Undo 버튼에서 호출한다. Board의 마지막 이동을 되돌리고 모든 뷰를 갱신한다.
+        public void HandleUndo()
         {
             if (!_board.TryUndo()) return;
 
