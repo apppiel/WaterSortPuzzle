@@ -4,7 +4,9 @@
     "references": [
         "WaterSortPuzzle.Core",
         "WaterSortPuzzle.Data",
-        "Unity.InputSystem"
+        "Unity.InputSystem",
+        "DOTween",
+        "Unity.TextMeshPro"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
