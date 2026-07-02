@@ -1,2 +1,6 @@
 ﻿<Solution>
+  <Project Path="WaterSortPuzzle.Core.csproj" />
+  <Project Path="WaterSortPuzzle.Game.csproj" />
+  <Project Path="WaterSortPuzzle.Tests.csproj" />
+  <Project Path="WaterSortPuzzle.Data.csproj" />
 </Solution>
