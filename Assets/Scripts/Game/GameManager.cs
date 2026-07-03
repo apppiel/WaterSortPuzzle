@@ -29,6 +29,9 @@ namespace WaterSortPuzzle.Game
         // 인스펙터에서 드래그로 연결하는 한글 TMP 폰트 에셋 (NanumSquareRoundEB SDF)
         [SerializeField] private TMP_FontAsset koreanFont;
 
+        // 현재 레벨 번호를 표시하는 텍스트 (인스펙터에서 연결)
+        [SerializeField] private TextMeshProUGUI _levelText;
+
 
         // Core 게임 상태 (튜브 집합 + 이동 히스토리)
         private Board _board;
@@ -73,6 +76,10 @@ namespace WaterSortPuzzle.Game
                 return;
             }
             _levelData = _levels[_currentLevelIndex];
+
+            // 레벨 텍스트 업데이트 (1부터 시작)
+            if (_levelText != null)
+                _levelText.text = $"Level {_currentLevelIndex + 1}";
 
             var tubes = BuildTubes();       // Core 데이터 생성
             _board = new Board(tubes);      // 게임 상태 초기화
