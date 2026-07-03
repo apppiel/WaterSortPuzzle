@@ -194,6 +194,7 @@ namespace WaterSortPuzzle.Game
                     if (WinChecker.IsWon(_board))
                     {
                         _gameOver = true;
+                        LevelProgressManager.SaveClear(_currentLevelIndex); // 클리어 저장
                         PlayClearSequence();
                     }
                 });
