@@ -503,15 +503,16 @@ MonoBehaviour:
   m_EditorClassIdentifier: WaterSortPuzzle.Game::WaterSortPuzzle.Game.GameManager
   _levels:
   - {fileID: 11400000, guid: 466945759c29f45f3966e02de3f55d78, type: 2}
-  - {fileID: 11400000, guid: 9f92e11853a2a4db89e1f7d7dc1f5dfd, type: 2}
-  - {fileID: 11400000, guid: bbff6ed7642594a29b4929918d5482c3, type: 2}
-  - {fileID: 11400000, guid: 79eea1d0abe1842a5a60149548b55e16, type: 2}
-  - {fileID: 11400000, guid: 9c06fcf4aa1c142388f344c61f4e517b, type: 2}
-  - {fileID: 11400000, guid: 1ce4521e13d264b7984996d437421d10, type: 2}
-  - {fileID: 11400000, guid: 7f3878947a68b4934b3cfd34538ab8bc, type: 2}
-  - {fileID: 11400000, guid: 3b46a5b59cb444d8e8716cdcfbcd894d, type: 2}
-  - {fileID: 11400000, guid: 127dbbf2c87d042c49c6369875fc6926, type: 2}
-  - {fileID: 11400000, guid: 17885ed78dc744cb6b77852ed9a5af26, type: 2}
+  - {fileID: 11400000, guid: 652a2f999174e4f56908e7b98eb84e2d, type: 2}
+  - {fileID: 11400000, guid: 298484baf84a64e699780a732fca0114, type: 2}
+  - {fileID: 11400000, guid: 4bf103c9dc7da4de39c51bceeb58ae41, type: 2}
+  - {fileID: 11400000, guid: 0a0ce1e124b364d6e8bf3b3bc582f66e, type: 2}
+  - {fileID: 11400000, guid: 03ecac670dccd4d399d478f523f374b2, type: 2}
+  - {fileID: 11400000, guid: 58ea2c8278cbb4ddb82ca5b92da6b5aa, type: 2}
+  - {fileID: 11400000, guid: ca566fe4674574874986fafee65f795e, type: 2}
+  - {fileID: 11400000, guid: cbf022657a5f347d2b493de3ceff7268, type: 2}
+  - {fileID: 11400000, guid: 7f63806a9778c4a1ca1f8d9f42890a3b, type: 2}
+  - {fileID: 11400000, guid: bd8f1c517f8a64914aff8881742d8122, type: 2}
   tubeSprite: {fileID: -1817037104350664956, guid: 41fcd27acec29414595303ce7b17ada0, type: 3}
   koreanFont: {fileID: 11400000, guid: 215a29a15dc9d41549087d1c9affc4d7, type: 2}
 --- !u!4 &783727301
