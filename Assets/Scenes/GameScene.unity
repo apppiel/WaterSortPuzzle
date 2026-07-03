@@ -501,7 +501,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 95d8ecb24cf274fe2984fc7a895c6059, type: 3}
   m_Name: 
   m_EditorClassIdentifier: WaterSortPuzzle.Game::WaterSortPuzzle.Game.GameManager
-  levelData: {fileID: 11400000, guid: 9f92e11853a2a4db89e1f7d7dc1f5dfd, type: 2}
+  _levels:
+  - {fileID: 11400000, guid: 9f92e11853a2a4db89e1f7d7dc1f5dfd, type: 2}
   tubeSprite: {fileID: -1817037104350664956, guid: 41fcd27acec29414595303ce7b17ada0, type: 3}
   koreanFont: {fileID: 11400000, guid: 215a29a15dc9d41549087d1c9affc4d7, type: 2}
 --- !u!4 &783727301
