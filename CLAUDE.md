@@ -142,6 +142,12 @@ UnityEngine을 참조하지 않으므로, 컴파일러가 경계를 강제한다
 - [x] 씬 전환 시스템 (로딩 → 메인메뉴 → 레벨선택 → 게임 → 클리어 → 다음레벨)
 - [x] GameManager 레벨 연동 (PlayerPrefs로 선택 레벨 전달)
 - [x] 클리어 팝업 다음 버튼 — 다음 레벨 이동 / 마지막 레벨 시 레벨선택 복귀
+- [x] 레벨 진행 상태 저장/해금 시스템 (LevelProgressManager, PlayerPrefs)
+- [x] 터치 입력 대응 (Pointer.current로 마우스/터치 통합)
+- [x] 모바일 프레임 드랍 개선 (targetFrameRate=60, ContentSizeFitter 비활성화)
+- [x] `Editor/LevelGeneratorWindow` — 레벨 자동 생성 툴 (역방향 셔플)
+- [x] `Editor/LevelImporterWindow` — 텍스트 붙여넣기로 LevelData 에셋 생성
+- [x] 게임 화면 레벨 번호 텍스트 표시 (Level N)
 
 ### TODO
 
@@ -154,12 +160,10 @@ UnityEngine을 참조하지 않으므로, 컴파일러가 경계를 강제한다
 - [ ] 설정 메뉴 (사운드 등)
 - [ ] Safe Area 대응 (노치/홈 인디케이터)
 - [ ] 레벨선택 씬 — 클리어한 레벨 표시 (별 or 색상 구분)
-- [ ] 레벨선택 씬 — 잠긴 레벨 표시 (순서대로 해금)
 - [ ] 로딩 씬 — 배경 이미지/로고 추가
 
 #### 레벨
 - [ ] 레벨 데이터 다수 제작 (난이도 순, 100개 목표)
-- [ ] 레벨 진행 상태 저장/불러오기 (클리어 여부 PlayerPrefs)
 
 #### 게임플레이
 - [ ] 힌트 기능
