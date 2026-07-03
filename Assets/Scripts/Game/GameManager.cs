@@ -80,22 +80,24 @@ namespace WaterSortPuzzle.Game
             BuildClearPopup();              // 클리어 팝업 생성 (평소엔 숨김)
         }
 
-        // 매 프레임 호출된다. 마우스 클릭 입력을 처리한다.
+        // 매 프레임 호출된다. 터치 및 마우스 클릭 입력을 처리한다.
         private void Update()
         {
             // 클리어 후 또는 애니메이션 중에는 입력 무시
             if (_gameOver || _isAnimating) return;
 
-            // 마우스가 없으면 스킵 (에디터 전용 코드. 모바일에서는 터치로 대체 예정)
-            if (Mouse.current == null) return;
+            // Pointer는 마우스와 터치스크린을 모두 추상화한다.
+            // 에디터에서는 마우스, 모바일에서는 터치로 자동 전환된다.
+            var pointer = Pointer.current;
+            if (pointer == null) return;
 
-            // 마우스 왼쪽 버튼을 이번 프레임에 눌렀을 때
-            if (Mouse.current.leftButton.wasPressedThisFrame)
+            // 이번 프레임에 화면을 눌렀을 때
+            if (pointer.press.wasPressedThisFrame)
             {
                 // 스크린 좌표를 월드 좌표로 변환
-                Vector2 worldPos = Camera.main.ScreenToWorldPoint(Mouse.current.position.ReadValue());
+                Vector2 worldPos = Camera.main.ScreenToWorldPoint(pointer.position.ReadValue());
 
-                // 클릭한 위치에 Collider2D가 있는지 확인
+                // 클릭/터치한 위치에 Collider2D가 있는지 확인
                 var hit = Physics2D.OverlapPoint(worldPos);
 
                 // TubeClickTarget 컴포넌트가 있는 Collider면 튜브 클릭으로 처리
