@@ -97,14 +97,20 @@ public class LevelImporterWindow : EditorWindow
             MessageType.Info);
     }
 
-    // 저장 경로에서 다음으로 사용 가능한 파일 번호를 찾는다
+    // 저장 경로에서 가장 큰 파일 번호 + 1을 반환한다
     private int GetNextAvailableIndex()
     {
         if (!System.IO.Directory.Exists(_savePath)) return 0;
-        int index = 0;
-        while (System.IO.File.Exists($"{_savePath}/LevelData_{index:D2}.asset"))
-            index++;
-        return index;
+        var files = System.IO.Directory.GetFiles(_savePath, "LevelData_*.asset");
+        int max = -1;
+        foreach (string file in files)
+        {
+            string name = System.IO.Path.GetFileNameWithoutExtension(file);
+            string numberStr = name.Replace("LevelData_", "");
+            if (int.TryParse(numberStr, out int n) && n > max)
+                max = n;
+        }
+        return max + 1;
     }
 
     // 텍스트 전체를 레벨 단위로 분리해서 각각 에셋으로 만든다
