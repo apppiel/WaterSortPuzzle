@@ -4,5 +4,6 @@
   <Project Path="Assembly-CSharp.csproj" />
   <Project Path="WaterSortPuzzle.Game.csproj" />
   <Project Path="WaterSortPuzzle.Tests.csproj" />
+  <Project Path="WaterSortPuzzle.UI.csproj" />
   <Project Path="WaterSortPuzzle.Data.csproj" />
 </Solution>

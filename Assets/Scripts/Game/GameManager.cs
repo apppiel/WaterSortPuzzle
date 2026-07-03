@@ -5,6 +5,7 @@ using DG.Tweening;
 using TMPro;
 using WaterSortPuzzle.Core;
 using WaterSortPuzzle.Data;
+using WaterSortPuzzle.UI;
 
 namespace WaterSortPuzzle.Game
 {
@@ -13,8 +14,14 @@ namespace WaterSortPuzzle.Game
     // 입력을 받아 Pour/Undo를 실행하고, 승리를 감지한다.
     public class GameManager : MonoBehaviour
     {
-        // 인스펙터에서 드래그로 연결하는 레벨 데이터
-        [SerializeField] private LevelData levelData;
+        // 인스펙터에서 드래그로 연결하는 전체 레벨 데이터 배열
+        [SerializeField] private LevelData[] _levels;
+
+        // 현재 플레이 중인 레벨 데이터 (Start에서 _levels[선택된 인덱스]로 설정됨)
+        private LevelData _levelData;
+
+        // 현재 레벨 번호 (0부터 시작)
+        private int _currentLevelIndex;
 
         // 인스펙터에서 드래그로 연결하는 튜브 스프라이트 (Assets/Sprites/Frame 1.png)
         [SerializeField] private Sprite tubeSprite;
@@ -56,6 +63,17 @@ namespace WaterSortPuzzle.Game
         // 씬 시작 시 한 번 호출된다. LevelData로 Board와 TubeView를 생성한다.
         private void Start()
         {
+            // 레벨선택 씬에서 저장한 레벨 번호를 읽어온다. 없으면 0번(첫 레벨)
+            _currentLevelIndex = PlayerPrefs.GetInt("SelectedLevel", 0);
+
+            // 유효한 인덱스인지 확인 후 레벨 데이터 설정
+            if (_levels == null || _levels.Length == 0 || _currentLevelIndex >= _levels.Length)
+            {
+                Debug.LogError("LevelData가 설정되지 않았거나 인덱스가 범위를 벗어났습니다.");
+                return;
+            }
+            _levelData = _levels[_currentLevelIndex];
+
             var tubes = BuildTubes();       // Core 데이터 생성
             _board = new Board(tubes);      // 게임 상태 초기화
             _tubeViews = BuildViews(tubes); // 화면 오브젝트 생성
@@ -114,7 +132,7 @@ namespace WaterSortPuzzle.Game
                 // 붓기 전에 애니메이션에 필요한 정보를 미리 저장한다
                 // (TryPour 이후에는 Board 상태가 바뀌어 원래 값을 알 수 없음)
                 int colorId = _board.GetTube(from).TopColor;
-                Color animColor = levelData.palette[colorId];
+                Color animColor = _levelData.palette[colorId];
                 Vector3 startPos = _tubeViews[from].GetSlotWorldPos(_board.GetTube(from).Count - 1);
 
                 // Core에서 규칙 검증 + 이동 (Board 상태가 여기서 바뀜)
@@ -200,11 +218,18 @@ namespace WaterSortPuzzle.Game
             var go = new GameObject("ClearPopup");
             _clearPopup = go.AddComponent<ClearPopup>();
             _clearPopup.Init(
-                // 다시하기: 현재 씬을 다시 로드
-                onRetry: () => SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex),
-                // TODO: 다음 레벨 씬 전환 시스템 구현 후 교체
-                onNext:  () => SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex),
-                font:    koreanFont
+                // 다시하기: 현재 레벨을 처음부터 다시 시작
+                onRetry: () => SceneLoader.LoadGame(_currentLevelIndex),
+                // 다음 레벨: 마지막 레벨이면 레벨선택으로, 아니면 다음 레벨로 이동
+                onNext: () =>
+                {
+                    int nextIndex = _currentLevelIndex + 1;
+                    if (nextIndex < _levels.Length)
+                        SceneLoader.LoadGame(nextIndex);
+                    else
+                        SceneLoader.LoadLevelSelect();
+                },
+                font: koreanFont
             );
         }
 
@@ -213,12 +238,12 @@ namespace WaterSortPuzzle.Game
         // LevelData의 TubeInitData 배열을 읽어 Core Tube 배열을 만든다.
         private Tube[] BuildTubes()
         {
-            var tubes = new Tube[levelData.tubes.Length];
+            var tubes = new Tube[_levelData.tubes.Length];
             for (int i = 0; i < tubes.Length; i++)
             {
                 // segments가 null이면 빈 배열로 처리 (빈 튜브)
-                int[] segs = levelData.tubes[i].segments ?? System.Array.Empty<int>();
-                tubes[i] = new Tube(levelData.tubeCapacity, segs);
+                int[] segs = _levelData.tubes[i].segments ?? System.Array.Empty<int>();
+                tubes[i] = new Tube(_levelData.tubeCapacity, segs);
             }
             return tubes;
         }
@@ -227,14 +252,14 @@ namespace WaterSortPuzzle.Game
         private TubeView[] BuildViews(Tube[] tubes)
         {
             _square = CreateSquareSprite(); // 필드에 저장 (애니메이션에서도 재사용)
-            Color[] palette = levelData.palette;
+            Color[] palette = _levelData.palette;
 
             // 전체 튜브를 화면 가로 중앙에 배치
             float totalWidth = (tubes.Length - 1) * TubeSpacing;
             float startX = -totalWidth / 2f;
 
             // 튜브 세로 중앙 정렬
-            float centerY = -(levelData.tubeCapacity - 1) * SegmentSize * 0.5f;
+            float centerY = -(_levelData.tubeCapacity - 1) * SegmentSize * 0.5f;
 
             var views = new TubeView[tubes.Length];
             for (int i = 0; i < tubes.Length; i++)
