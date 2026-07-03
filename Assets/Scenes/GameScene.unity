@@ -503,6 +503,14 @@ MonoBehaviour:
   m_EditorClassIdentifier: WaterSortPuzzle.Game::WaterSortPuzzle.Game.GameManager
   _levels:
   - {fileID: 11400000, guid: 9f92e11853a2a4db89e1f7d7dc1f5dfd, type: 2}
+  - {fileID: 11400000, guid: bbff6ed7642594a29b4929918d5482c3, type: 2}
+  - {fileID: 11400000, guid: 79eea1d0abe1842a5a60149548b55e16, type: 2}
+  - {fileID: 11400000, guid: 9c06fcf4aa1c142388f344c61f4e517b, type: 2}
+  - {fileID: 11400000, guid: 1ce4521e13d264b7984996d437421d10, type: 2}
+  - {fileID: 11400000, guid: 7f3878947a68b4934b3cfd34538ab8bc, type: 2}
+  - {fileID: 11400000, guid: 3b46a5b59cb444d8e8716cdcfbcd894d, type: 2}
+  - {fileID: 11400000, guid: 127dbbf2c87d042c49c6369875fc6926, type: 2}
+  - {fileID: 11400000, guid: 17885ed78dc744cb6b77852ed9a5af26, type: 2}
   tubeSprite: {fileID: -1817037104350664956, guid: 41fcd27acec29414595303ce7b17ada0, type: 3}
   koreanFont: {fileID: 11400000, guid: 215a29a15dc9d41549087d1c9affc4d7, type: 2}
 --- !u!4 &783727301
