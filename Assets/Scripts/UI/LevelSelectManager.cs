@@ -4,6 +4,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
+using System.Collections;
 
 namespace WaterSortPuzzle.UI
 {
@@ -22,6 +23,16 @@ namespace WaterSortPuzzle.UI
         private void Start()
         {
             GenerateLevelButtons();
+            StartCoroutine(DisableContentSizeFitterAfterLayout());
+        }
+
+        // 레이아웃이 완성된 후 ContentSizeFitter를 끈다
+        // ContentSizeFitter는 매 프레임 크기를 재계산해서 성능을 낭비한다
+        private IEnumerator DisableContentSizeFitterAfterLayout()
+        {
+            yield return null; // 한 프레임 기다려 레이아웃이 완성되게 함
+            var fitter = _content.GetComponent<ContentSizeFitter>();
+            if (fitter != null) fitter.enabled = false;
         }
 
         // 레벨 수만큼 버튼을 생성하고 진행 상태를 반영한다

@@ -14,6 +14,8 @@ namespace WaterSortPuzzle.UI
 
         private void Start()
         {
+            // 모바일에서 60fps로 고정 (설정 안 하면 최대 속도로 돌아 배터리/발열 문제 생김)
+            Application.targetFrameRate = 60;
             StartCoroutine(LoadMainMenu());
         }
 
