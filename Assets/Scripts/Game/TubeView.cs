@@ -22,6 +22,12 @@ namespace WaterSortPuzzle.Game
         // 선택 하이라이트 SpriteRenderer (병 뒤에서 노랗게 빛남)
         private SpriteRenderer _selectionHighlight;
 
+        // 선택 해제 시 돌아올 원래 월드 위치
+        private Vector3 _basePosition;
+
+        // 선택 시 위로 올라가는 거리 (월드 유닛)
+        private const float SelectLiftY = 0.22f;
+
         // 빈 슬롯 색 (연한 회색 반투명)
         private static readonly Color EmptySlotColor = new(0.85f, 0.85f, 0.85f, 0.4f);
 
@@ -35,14 +41,18 @@ namespace WaterSortPuzzle.Game
         // index: 튜브 인덱스 (클릭 감지용)
         // tube: Core 튜브 데이터
         // palette: ColorId → Color 팔레트 배열
-        // square: 1x1 흰색 스프라이트 (슬롯과 하이라이트에 사용)
-        // bottleSprite: 병 PNG 스프라이트 (가장 위에 올라감)
+        // square: 1x1 흰색 스프라이트 (하이라이트·애니메이션에 사용)
+        // tubeSprite: 병 PNG 스프라이트 (가장 위에 올라가 유리 테두리 효과)
+        // tubeMask: 병 내부 마스크 스프라이트 (세그먼트를 병 모양으로 클리핑)
         // segmentSize: 세그먼트 한 칸의 월드 유닛 크기
         // onClicked: 튜브 클릭 시 호출할 콜백
-        public void Init(int index, Tube tube, Color[] palette, Sprite square, Sprite tubeSprite, float segmentSize, Action<int> onClicked)
+        public void Init(int index, Tube tube, Color[] palette, Sprite square, Sprite tubeSprite, Sprite tubeMask, float segmentSize, Action<int> onClicked)
         {
             _tube = tube;
             _palette = palette;
+
+            // GameManager가 위치를 설정한 뒤 Init을 호출하므로 여기서 기준 위치를 기억한다
+            _basePosition = transform.position;
 
             float s = segmentSize;
 
@@ -68,6 +78,17 @@ namespace WaterSortPuzzle.Game
             _selectionHighlight.color = HighlightNormal; // 평소엔 투명
             _selectionHighlight.sortingOrder = -10;      // 슬롯보다 뒤
 
+            // ── SpriteMask: 세그먼트를 병 내부 모양으로 클리핑 ──
+            // 마스크 스프라이트의 알파값이 1인 영역에서만 세그먼트가 보인다.
+            var maskGo = new GameObject("TubeMask");
+            maskGo.transform.SetParent(transform, false);
+            maskGo.transform.localPosition = new Vector3(0f, (tube.Capacity - 1) * s * 0.5f, 0f);
+            float maskNativeW = tubeMask.rect.width / tubeMask.pixelsPerUnit;
+            float maskScale = (s * 1.1f) / maskNativeW;
+            maskGo.transform.localScale = new Vector3(maskScale, maskScale, 1f);
+            var spriteMask = maskGo.AddComponent<SpriteMask>();
+            spriteMask.sprite = tubeMask;
+
             // ── 세그먼트 슬롯 생성 ──────────────────────────────
             _slots = new SpriteRenderer[tube.Capacity];
             for (int i = 0; i < tube.Capacity; i++)
@@ -78,12 +99,15 @@ namespace WaterSortPuzzle.Game
                 // 슬롯 위치: 아래(i=0)부터 위(i=Capacity-1)로 쌓임
                 slotGo.transform.localPosition = new Vector3(0f, i * s, 0f);
 
-                // 슬롯 크기: 세그먼트 크기보다 약간 작게 (슬롯 사이 여백 생김)
-                slotGo.transform.localScale = new Vector3(s * 0.88f, s * 0.88f, 1f);
+                // 슬롯 너비를 병 내부보다 넉넉하게, 높이는 살짝 겹쳐 틈 제거
+                // SpriteMask가 병 모양 바깥쪽을 잘라주므로 넓어도 무방하다.
+                slotGo.transform.localScale = new Vector3(s * 1.5f, s * 1.02f, 1f);
 
                 var sr = slotGo.AddComponent<SpriteRenderer>();
                 sr.sprite = square;
-                sr.sortingOrder = 10; // 하이라이트보다 앞, 병보다 뒤
+                sr.sortingOrder = 10;
+                // 마스크 영역 안에서만 보이도록 설정
+                sr.maskInteraction = SpriteMaskInteraction.VisibleInsideMask;
 
                 _slots[i] = sr;
             }
@@ -127,10 +151,67 @@ namespace WaterSortPuzzle.Game
         }
 
         // 선택 상태를 시각적으로 표시한다.
-        // selected=true면 병 뒤에서 노란 빛이 남, false면 투명.
+        // selected=true면 위로 올라오며 하이라이트, false면 원위치로 복귀.
         public void SetSelected(bool selected)
         {
             _selectionHighlight.color = selected ? HighlightSelected : HighlightNormal;
+
+            // 선택 시 살짝 위로 올라옴 (OutBack → 약간 튀는 느낌)
+            // 해제 시 부드럽게 원래 위치로 복귀
+            float targetY = selected ? _basePosition.y + SelectLiftY : _basePosition.y;
+            transform.DOMoveY(targetY, 0.18f)
+                     .SetEase(selected ? Ease.OutBack : Ease.OutQuad);
+        }
+
+        // 붓기 애니메이션: 병이 대상 위치로 이동해 기울어서 붓고 원위치로 돌아온다.
+        // onPoured : 병이 기울어져 붓는 타이밍 (출발·도착 튜브 Refresh 용)
+        // onDone   : 병이 완전히 원위치로 복귀한 뒤 (입력 잠금 해제·승리 판정 용)
+        public void PlayPourTo(Vector3 destTubePos, System.Action onPoured, System.Action onDone)
+        {
+            // 병목(입구)까지의 로컬 Y 거리: 스프라이트 비율로 계산한 고정값
+            // 병 스프라이트 70x300px, scale=1.1 기준 → neck 위치 ≈ transform 위 2.59 유닛
+            const float NeckHeight = 2.59f;
+            const float MaxAngle   = 52f; // 최대 기울기 — 이 이상이면 xNudge(수평 이동)로 보정
+
+            float direction = (destTubePos.x > _basePosition.x) ? 1f : -1f;
+            float dx        = Mathf.Abs(destTubePos.x - _basePosition.x);
+            float maxReach  = NeckHeight * Mathf.Sin(MaxAngle * Mathf.Deg2Rad); // ≈ 2.53
+
+            float pourAngleDeg, xNudge;
+            if (dx <= maxReach)
+            {
+                // 기울기만으로 병목이 목표 입구에 정확히 닿는 각도 계산 (sin θ = dx / NeckHeight)
+                xNudge       = 0f;
+                pourAngleDeg = Mathf.Asin(dx / NeckHeight) * Mathf.Rad2Deg;
+            }
+            else
+            {
+                // 범위를 벗어날 만큼 멀면 최대 각도 + 피벗을 나머지 거리만큼 이동
+                pourAngleDeg = MaxAngle;
+                xNudge       = dx - maxReach;
+            }
+
+            // Unity Z축: 음수=시계방향(오른쪽 기울기), 양수=반시계방향(왼쪽 기울기)
+            float pourAngle = -direction * pourAngleDeg;
+            Vector3 liftPos = new Vector3(
+                _basePosition.x + direction * xNudge,
+                _basePosition.y + 1.2f,
+                0f
+            );
+
+            DOTween.Sequence()
+                // 1. 들어올리기 + 기울이기 동시 (자연스러운 호 동작)
+                //    이동이 끝나는 시점에 기울기가 살짝 늦게 완성 → 먼저 올라가고 따라오는 느낌
+                .Append(transform.DOMove(liftPos, 0.42f).SetEase(Ease.OutSine))
+                .Join(transform.DORotate(new Vector3(0f, 0f, pourAngle), 0.52f).SetEase(Ease.InOutSine))
+                // 2. 붓기 콜백 (양쪽 튜브 화면 갱신)
+                .AppendCallback(() => onPoured?.Invoke())
+                // 3. 기울인 채로 잠깐 유지
+                .AppendInterval(0.18f)
+                // 4. 각도 복귀 + 원위치 이동 동시
+                .Append(transform.DORotate(Vector3.zero, 0.3f).SetEase(Ease.InSine))
+                .Join(transform.DOMove(_basePosition, 0.42f).SetEase(Ease.OutBack))
+                .OnComplete(() => onDone?.Invoke());
         }
 
         // 클리어 시 통통 튀는 애니메이션을 재생한다.

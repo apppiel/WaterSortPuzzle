@@ -23,15 +23,17 @@ namespace WaterSortPuzzle.Game
         // 현재 레벨 번호 (0부터 시작)
         private int _currentLevelIndex;
 
-        // 인스펙터에서 드래그로 연결하는 튜브 스프라이트 (Assets/Sprites/Frame 1.png)
+        // 인스펙터에서 드래그로 연결하는 튜브 스프라이트 (Assets/Sprites/Tube.png)
         [SerializeField] private Sprite tubeSprite;
+
+        // 세그먼트를 병 모양으로 클리핑하는 마스크 스프라이트 (Assets/Sprites/TubeMask.png)
+        [SerializeField] private Sprite _tubeMask;
 
         // 인스펙터에서 드래그로 연결하는 한글 TMP 폰트 에셋 (NanumSquareRoundEB SDF)
         [SerializeField] private TMP_FontAsset koreanFont;
 
         // 현재 레벨 번호를 표시하는 텍스트 (인스펙터에서 연결)
         [SerializeField] private TextMeshProUGUI _levelText;
-
 
         // Core 게임 상태 (튜브 집합 + 이동 히스토리)
         private Board _board;
@@ -48,20 +50,17 @@ namespace WaterSortPuzzle.Game
         // 애니메이션 재생 중 입력을 막기 위한 플래그
         private bool _isAnimating;
 
-        // 1x1 흰색 스프라이트 (TubeView와 애니메이션 오브젝트 모두 사용)
+        // 1x1 흰색 스프라이트 (TubeView 세그먼트·하이라이트용)
         private Sprite _square;
 
         // 클리어 팝업 UI
         private ClearPopup _clearPopup;
 
         // 세그먼트 한 칸의 월드 유닛 크기 (이 값 하나로 전체 크기 조절)
-        private const float SegmentSize = 0.5f;
+        private const float SegmentSize = 0.7f;
 
         // 튜브 사이 간격 (월드 유닛)
-        private const float TubeSpacing = 0.8f;
-
-        // 붓기 애니메이션 총 시간 (초)
-        private const float PourDuration = 0.35f;
+        private const float TubeSpacing = 1.1f;
 
         // 씬 시작 시 한 번 호출된다. LevelData로 Board와 TubeView를 생성한다.
         private void Start()
@@ -138,23 +137,14 @@ namespace WaterSortPuzzle.Game
                 _tubeViews[from].SetSelected(false);
                 _selectedIndex = -1;
 
-                // 붓기 전에 애니메이션에 필요한 정보를 미리 저장한다
-                // (TryPour 이후에는 Board 상태가 바뀌어 원래 값을 알 수 없음)
-                int colorId = _board.GetTube(from).TopColor;
-                Color animColor = _levelData.palette[colorId];
-                Vector3 startPos = _tubeViews[from].GetSlotWorldPos(_board.GetTube(from).Count - 1);
+                // TryPour 이후 Board 상태가 바뀌므로 색을 미리 저장한다
+                Color pourColor = _levelData.palette[_board.GetTube(from).TopColor];
 
-                // Core에서 규칙 검증 + 이동 (Board 상태가 여기서 바뀜)
+                // Core에서 규칙 검증 + 이동
                 int moved = _board.TryPour(from, index);
 
                 if (moved > 0)
-                {
-                    // 붓기 후 도착 튜브의 새 맨 위 슬롯 위치
-                    Vector3 endPos = _tubeViews[index].GetSlotWorldPos(_board.GetTube(index).Count - 1);
-
-                    // 애니메이션 재생 (완료 후 Refresh와 승리 판정)
-                    PlayPourAnimation(from, index, animColor, startPos, endPos);
-                }
+                    PlayPourAnimation(from, index);
             }
         }
 
@@ -170,43 +160,32 @@ namespace WaterSortPuzzle.Game
                 view.Refresh();
         }
 
-        // 세그먼트가 출발 튜브에서 도착 튜브로 날아가는 애니메이션을 재생한다.
-        // 완료 후 양쪽 TubeView를 갱신하고 승리 조건을 확인한다.
-        private void PlayPourAnimation(int from, int to, Color color, Vector3 startPos, Vector3 endPos)
+        // 붓기 애니메이션: 출발 병이 이동·기울어서 도착 병에 붓고 돌아온다.
+        private void PlayPourAnimation(int from, int to)
         {
             _isAnimating = true;
 
-            // 이동할 세그먼트를 표현하는 임시 오브젝트 생성
-            var animGo = new GameObject("PourAnim");
-            var sr = animGo.AddComponent<SpriteRenderer>();
-            sr.sprite = _square;
-            sr.color = color;
-            sr.sortingOrder = 20; // 튜브 배경(−10)과 슬롯(10)보다 앞에 렌더링
-            animGo.transform.position = startPos;
-            animGo.transform.localScale = Vector3.one * SegmentSize * 0.88f;
+            Vector3 destPos = _tubeViews[to].transform.position;
 
-            // 포물선 궤적을 위한 중간 지점 (두 튜브 중간에서 위로 올라감)
-            Vector3 midPos = (startPos + endPos) / 2f + Vector3.up * 0.8f;
-
-            // DOTween 시퀀스: 위로 올라갔다가 → 도착 위치로 내려옴
-            DOTween.Sequence()
-                .Append(animGo.transform.DOMove(midPos, PourDuration * 0.5f).SetEase(Ease.OutQuad))
-                .Append(animGo.transform.DOMove(endPos, PourDuration * 0.5f).SetEase(Ease.InQuad))
-                .OnComplete(() =>
+            _tubeViews[from].PlayPourTo(
+                destTubePos: destPos,
+                onPoured: () =>
                 {
-                    Destroy(animGo);                   // 임시 오브젝트 제거
-                    _tubeViews[from].Refresh();        // 출발 튜브 화면 갱신
-                    _tubeViews[to].Refresh();          // 도착 튜브 화면 갱신
-                    _isAnimating = false;              // 입력 잠금 해제
+                    _tubeViews[from].Refresh();
+                    _tubeViews[to].Refresh();
+                },
+                onDone: () =>
+                {
+                    _isAnimating = false;
 
-                    // 승리 조건 확인
                     if (WinChecker.IsWon(_board))
                     {
                         _gameOver = true;
-                        LevelProgressManager.SaveClear(_currentLevelIndex); // 클리어 저장
+                        LevelProgressManager.SaveClear(_currentLevelIndex);
                         PlayClearSequence();
                     }
-                });
+                }
+            );
         }
 
         // 클리어 연출을 재생한다.
@@ -261,7 +240,7 @@ namespace WaterSortPuzzle.Game
         // Tube 배열로 TubeView 오브젝트를 생성하고 화면 중앙에 배치한다.
         private TubeView[] BuildViews(Tube[] tubes)
         {
-            _square = CreateSquareSprite(); // 필드에 저장 (애니메이션에서도 재사용)
+            _square = CreateSquareSprite();
             Color[] palette = _levelData.palette;
 
             // 전체 튜브를 화면 가로 중앙에 배치
@@ -279,22 +258,18 @@ namespace WaterSortPuzzle.Game
 
                 // TubeView 컴포넌트를 추가하고 초기화
                 var view = go.AddComponent<TubeView>();
-                view.Init(i, tubes[i], palette, _square, tubeSprite, SegmentSize, HandleTubeClicked);
+                view.Init(i, tubes[i], palette, _square, tubeSprite, _tubeMask, SegmentSize, HandleTubeClicked);
                 views[i] = view;
             }
             return views;
         }
 
         // 1x1 흰색 Sprite를 코드로 생성한다.
-        // SpriteRenderer.color로 색을 입힐 수 있어서 에셋 없이 색 사각형을 만들 수 있다.
         private static Sprite CreateSquareSprite()
         {
             var tex = new Texture2D(1, 1);
-            tex.SetPixel(0, 0, Color.white); // 픽셀 하나를 흰색으로
-            tex.Apply();                      // GPU에 업로드
-            // Rect(0,0,1,1): 텍스처 전체 영역 사용
-            // Vector2(0.5, 0.5): 피벗(기준점)을 중앙으로
-            // 1f: Pixels Per Unit = 1 (1픽셀 = 1월드유닛)
+            tex.SetPixel(0, 0, Color.white);
+            tex.Apply();
             return Sprite.Create(tex, new Rect(0, 0, 1, 1), new Vector2(0.5f, 0.5f), 1f);
         }
     }
