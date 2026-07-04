@@ -56,11 +56,8 @@ namespace WaterSortPuzzle.Game
         // 클리어 팝업 UI
         private ClearPopup _clearPopup;
 
-        // 세그먼트 한 칸의 월드 유닛 크기 (이 값 하나로 전체 크기 조절)
-        private const float SegmentSize = 0.7f;
-
-        // 튜브 사이 간격 (월드 유닛)
-        private const float TubeSpacing = 1.1f;
+        // 튜브 6개 이하: 한 줄. 6개 초과: 두 줄로 전환하는 기준
+        private const int TwoRowThreshold = 6;
 
         // 씬 시작 시 한 번 호출된다. LevelData로 Board와 TubeView를 생성한다.
         private void Start()
@@ -238,30 +235,70 @@ namespace WaterSortPuzzle.Game
         }
 
         // Tube 배열로 TubeView 오브젝트를 생성하고 화면 중앙에 배치한다.
+        // 튜브가 6개 이하면 한 줄, 7개 이상이면 위/아래 두 줄로 배치한다.
         private TubeView[] BuildViews(Tube[] tubes)
         {
             _square = CreateSquareSprite();
             Color[] palette = _levelData.palette;
 
-            // 전체 튜브를 화면 가로 중앙에 배치
-            float totalWidth = (tubes.Length - 1) * TubeSpacing;
-            float startX = -totalWidth / 2f;
+            int   count   = tubes.Length;
+            bool  twoRows = count >= TwoRowThreshold;
 
-            // 튜브 세로 중앙 정렬
-            float centerY = -(_levelData.tubeCapacity - 1) * SegmentSize * 0.5f;
+            // 두 줄일 때 튜브를 더 작게 그려 화면에 여유 있게 들어오도록 조정
+            float segSize = twoRows ? 0.58f : 0.7f;
+            float spacing = twoRows ? 0.92f : 1.1f;
 
-            var views = new TubeView[tubes.Length];
-            for (int i = 0; i < tubes.Length; i++)
+            var views = new TubeView[count];
+
+            if (!twoRows)
             {
-                var go = new GameObject($"Tube{i}");
-                go.transform.position = new Vector3(startX + i * TubeSpacing, centerY, 0f);
-
-                // TubeView 컴포넌트를 추가하고 초기화
-                var view = go.AddComponent<TubeView>();
-                view.Init(i, tubes[i], palette, _square, tubeSprite, _tubeMask, SegmentSize, HandleTubeClicked);
-                views[i] = view;
+                // 한 줄 배치
+                float totalWidth = (count - 1) * spacing;
+                float centerY    = -(_levelData.tubeCapacity - 1) * segSize * 0.5f;
+                for (int i = 0; i < count; i++)
+                    views[i] = SpawnTubeView(i, tubes[i], palette, segSize,
+                        new Vector3(-totalWidth / 2f + i * spacing, centerY, 0f));
             }
+            else
+            {
+                // 두 줄 배치: 아래 줄 → 위 줄 순으로 인덱스 배정
+                int bottomCount = count / 2;
+                int topCount    = count - bottomCount;
+
+                // 행 간격: 튜브 시각적 높이 + 여백
+                float tubeVisualHeight = (_levelData.tubeCapacity - 1) * segSize;
+                float rowGap  = tubeVisualHeight + segSize * 2.8f;
+                float baseCenterY = -(_levelData.tubeCapacity - 1) * segSize * 0.5f;
+                float bottomY = baseCenterY - rowGap * 0.5f;
+                float topY    = baseCenterY + rowGap * 0.5f;
+
+                // 아래 줄
+                float bottomWidth = (bottomCount - 1) * spacing;
+                for (int i = 0; i < bottomCount; i++)
+                    views[i] = SpawnTubeView(i, tubes[i], palette, segSize,
+                        new Vector3(-bottomWidth / 2f + i * spacing, bottomY, 0f));
+
+                // 위 줄
+                float topWidth = (topCount - 1) * spacing;
+                for (int i = 0; i < topCount; i++)
+                {
+                    int idx = bottomCount + i;
+                    views[idx] = SpawnTubeView(idx, tubes[idx], palette, segSize,
+                        new Vector3(-topWidth / 2f + i * spacing, topY, 0f));
+                }
+            }
+
             return views;
+        }
+
+        // 튜브 GameObejct를 생성하고 TubeView를 초기화해 반환한다.
+        private TubeView SpawnTubeView(int index, Tube tube, Color[] palette, float segSize, Vector3 pos)
+        {
+            var go = new GameObject($"Tube{index}");
+            go.transform.position = pos;
+            var view = go.AddComponent<TubeView>();
+            view.Init(index, tube, palette, _square, tubeSprite, _tubeMask, segSize, HandleTubeClicked);
+            return view;
         }
 
         // 1x1 흰색 Sprite를 코드로 생성한다.
