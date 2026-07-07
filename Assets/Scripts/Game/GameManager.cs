@@ -35,6 +35,9 @@ namespace WaterSortPuzzle.Game
         // 현재 레벨 번호를 표시하는 텍스트 (인스펙터에서 연결)
         [SerializeField] private TextMeshProUGUI _levelText;
 
+        // 효과음 재생 담당 (인스펙터에서 연결)
+        [SerializeField] private AudioManager _audioManager;
+
         // Core 게임 상태 (튜브 집합 + 이동 히스토리)
         private Board _board;
 
@@ -121,6 +124,7 @@ namespace WaterSortPuzzle.Game
                 // 튜브 선택
                 _selectedIndex = index;
                 _tubeViews[index].SetSelected(true);
+                _audioManager?.PlaySelect();
             }
             else if (_selectedIndex == index)
             {
@@ -168,6 +172,7 @@ namespace WaterSortPuzzle.Game
                 destTubePos: destPos,
                 onPoured: () =>
                 {
+                    _audioManager?.PlayPour(); // 병이 기울어져 실제로 붓는 순간에 재생
                     _tubeViews[from].Refresh();
                     _tubeViews[to].Refresh();
                 },
@@ -179,6 +184,7 @@ namespace WaterSortPuzzle.Game
                     {
                         _gameOver = true;
                         LevelProgressManager.SaveClear(_currentLevelIndex);
+                        _audioManager?.PlayClear();
                         PlayClearSequence();
                     }
                 }
@@ -301,7 +307,7 @@ namespace WaterSortPuzzle.Game
             return view;
         }
 
-        // 1x1 흰색 Sprite를 코드로 생성한다.
+        // 1x1 흰색 Sprite를 코드로 생성한다. (하이라이트용)
         private static Sprite CreateSquareSprite()
         {
             var tex = new Texture2D(1, 1);
@@ -309,5 +315,6 @@ namespace WaterSortPuzzle.Game
             tex.Apply();
             return Sprite.Create(tex, new Rect(0, 0, 1, 1), new Vector2(0.5f, 0.5f), 1f);
         }
+
     }
 }

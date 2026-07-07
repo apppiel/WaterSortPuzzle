@@ -19,6 +19,9 @@ namespace WaterSortPuzzle.Game
         // 각 세그먼트 슬롯의 SpriteRenderer 배열 (index 0 = 가장 아래)
         private SpriteRenderer[] _slots;
 
+        // 각 슬롯 상단에 얹히는 얇은 하이라이트 선 (물 표면 반사 효과)
+        private SpriteRenderer[] _highlights;
+
         // 선택 하이라이트 SpriteRenderer (병 뒤에서 노랗게 빛남)
         private SpriteRenderer _selectionHighlight;
 
@@ -89,8 +92,9 @@ namespace WaterSortPuzzle.Game
             var spriteMask = maskGo.AddComponent<SpriteMask>();
             spriteMask.sprite = tubeMask;
 
-            // ── 세그먼트 슬롯 생성 ──────────────────────────────
-            _slots = new SpriteRenderer[tube.Capacity];
+            // ── 세그먼트 슬롯 + 하이라이트 생성 ────────────────
+            _slots      = new SpriteRenderer[tube.Capacity];
+            _highlights = new SpriteRenderer[tube.Capacity];
             for (int i = 0; i < tube.Capacity; i++)
             {
                 var slotGo = new GameObject($"Slot{i}");
@@ -100,16 +104,27 @@ namespace WaterSortPuzzle.Game
                 slotGo.transform.localPosition = new Vector3(0f, i * s, 0f);
 
                 // 슬롯 너비를 병 내부보다 넉넉하게, 높이는 살짝 겹쳐 틈 제거
-                // SpriteMask가 병 모양 바깥쪽을 잘라주므로 넓어도 무방하다.
                 slotGo.transform.localScale = new Vector3(s * 1.5f, s * 1.02f, 1f);
 
                 var sr = slotGo.AddComponent<SpriteRenderer>();
                 sr.sprite = square;
                 sr.sortingOrder = 10;
-                // 마스크 영역 안에서만 보이도록 설정
                 sr.maskInteraction = SpriteMaskInteraction.VisibleInsideMask;
-
                 _slots[i] = sr;
+
+                // 슬롯 상단에 얇은 흰색 반투명 선 → 물 표면 반사 효과
+                var shineGo = new GameObject($"Highlight{i}");
+                shineGo.transform.SetParent(transform, false);
+                // 슬롯 상단 끝에 위치 (슬롯 중심 + 높이의 절반 - 선 두께 절반)
+                shineGo.transform.localPosition = new Vector3(0f, i * s + s * 0.44f, 0f);
+                shineGo.transform.localScale     = new Vector3(s * 1.5f, s * 0.1f, 1f);
+
+                var hlSr = shineGo.AddComponent<SpriteRenderer>();
+                hlSr.sprite = square;
+                hlSr.color  = new Color(1f, 1f, 1f, 0f); // 평소엔 투명
+                hlSr.sortingOrder = 11;                    // 슬롯(10) 위
+                hlSr.maskInteraction = SpriteMaskInteraction.VisibleInsideMask;
+                _highlights[i] = hlSr;
             }
 
             // ── 튜브 스프라이트 (세그먼트 위에 올라가 유리 테두리 효과) ──
@@ -143,10 +158,21 @@ namespace WaterSortPuzzle.Game
         {
             for (int i = 0; i < _slots.Length; i++)
             {
+                bool filled = i < _tube.Count;
+
                 // 세그먼트가 있으면 팔레트 색, 없으면 빈 슬롯 색
-                _slots[i].color = i < _tube.Count
+                _slots[i].color = filled
                     ? _palette[_tube.GetSegment(i)]
                     : EmptySlotColor;
+
+                // 같은 색 연속 구간의 최상단에만 하이라이트 표시
+                // 바로 위 슬롯과 색이 다르거나(경계), 최상단 채워진 슬롯일 때만 선이 보인다
+                bool isTopOfColorRun = filled &&
+                    (i + 1 >= _tube.Count || _tube.GetSegment(i) != _tube.GetSegment(i + 1));
+
+                _highlights[i].color = isTopOfColorRun
+                    ? new Color(1f, 1f, 1f, 0.5f)
+                    : new Color(1f, 1f, 1f, 0f);
             }
         }
 
@@ -163,54 +189,43 @@ namespace WaterSortPuzzle.Game
                      .SetEase(selected ? Ease.OutBack : Ease.OutQuad);
         }
 
-        // 붓기 애니메이션: 병이 대상 위치로 이동해 기울어서 붓고 원위치로 돌아온다.
-        // onPoured : 병이 기울어져 붓는 타이밍 (출발·도착 튜브 Refresh 용)
+        // 붓기 애니메이션: 위로 올린 뒤 옆으로 이동해 기울여서 붓고 원위치로 돌아온다.
+        // onPoured : 기울기가 완성돼 붓는 타이밍 (출발·도착 튜브 Refresh 용)
         // onDone   : 병이 완전히 원위치로 복귀한 뒤 (입력 잠금 해제·승리 판정 용)
         public void PlayPourTo(Vector3 destTubePos, System.Action onPoured, System.Action onDone)
         {
-            // 병목(입구)까지의 로컬 Y 거리: 스프라이트 비율로 계산한 고정값
-            // 병 스프라이트 70x300px, scale=1.1 기준 → neck 위치 ≈ transform 위 2.59 유닛
-            const float NeckHeight = 2.59f;
-            const float MaxAngle   = 52f; // 최대 기울기 — 이 이상이면 xNudge(수평 이동)로 보정
+            // 병 스프라이트 기준 입구까지의 높이 (기울였을 때 입구 위치 계산용)
+            const float NeckHeight  = 2.59f;
+            const float PourAngle   = 65f;   // 붓기 각도 — 너무 크면 병끼리 겹침
+            const float LiftHeight  = 2.2f;  // 올리는 높이 — 높을수록 충돌 여유 생김
 
+            // 오른쪽이면 시계방향(-), 왼쪽이면 반시계방향(+)
             float direction = (destTubePos.x > _basePosition.x) ? 1f : -1f;
-            float dx        = Mathf.Abs(destTubePos.x - _basePosition.x);
-            float maxReach  = NeckHeight * Mathf.Sin(MaxAngle * Mathf.Deg2Rad); // ≈ 2.53
+            float zAngle    = -direction * PourAngle;
 
-            float pourAngleDeg, xNudge;
-            if (dx <= maxReach)
-            {
-                // 기울기만으로 병목이 목표 입구에 정확히 닿는 각도 계산 (sin θ = dx / NeckHeight)
-                xNudge       = 0f;
-                pourAngleDeg = Mathf.Asin(dx / NeckHeight) * Mathf.Rad2Deg;
-            }
-            else
-            {
-                // 범위를 벗어날 만큼 멀면 최대 각도 + 피벗을 나머지 거리만큼 이동
-                pourAngleDeg = MaxAngle;
-                xNudge       = dx - maxReach;
-            }
-
-            // Unity Z축: 음수=시계방향(오른쪽 기울기), 양수=반시계방향(왼쪽 기울기)
-            float pourAngle = -direction * pourAngleDeg;
-            Vector3 liftPos = new Vector3(
-                _basePosition.x + direction * xNudge,
-                _basePosition.y + 1.2f,
+            // 기울였을 때 입구가 대상 병 위에 오도록 X 위치를 계산
+            float mouthReach = NeckHeight * Mathf.Sin(PourAngle * Mathf.Deg2Rad);
+            Vector3 pourPos  = new Vector3(
+                destTubePos.x - direction * mouthReach,
+                _basePosition.y + LiftHeight,
                 0f
             );
 
             DOTween.Sequence()
-                // 1. 들어올리기 + 기울이기 동시 (자연스러운 호 동작)
-                //    이동이 끝나는 시점에 기울기가 살짝 늦게 완성 → 먼저 올라가고 따라오는 느낌
-                .Append(transform.DOMove(liftPos, 0.42f).SetEase(Ease.OutSine))
-                .Join(transform.DORotate(new Vector3(0f, 0f, pourAngle), 0.52f).SetEase(Ease.InOutSine))
-                // 2. 붓기 콜백 (양쪽 튜브 화면 갱신)
+                // 1. 제자리에서 위로 올리기
+                .Append(transform.DOMoveY(_basePosition.y + LiftHeight, 0.22f).SetEase(Ease.OutSine))
+                // 2. 대상 병 위로 수평 이동
+                .Append(transform.DOMove(pourPos, 0.22f).SetEase(Ease.OutSine))
+                // 3. 기울여서 붓기 (~85도)
+                .Append(transform.DORotate(new Vector3(0f, 0f, zAngle), 0.28f).SetEase(Ease.OutSine))
+                // 4. 붓기 콜백 (양쪽 튜브 화면 갱신)
                 .AppendCallback(() => onPoured?.Invoke())
-                // 3. 기울인 채로 잠깐 유지
-                .AppendInterval(0.18f)
-                // 4. 각도 복귀 + 원위치 이동 동시
-                .Append(transform.DORotate(Vector3.zero, 0.3f).SetEase(Ease.InSine))
-                .Join(transform.DOMove(_basePosition, 0.42f).SetEase(Ease.OutBack))
+                // 5. 기울인 채로 잠깐 유지
+                .AppendInterval(0.15f)
+                // 6. 기울기 복귀
+                .Append(transform.DORotate(Vector3.zero, 0.22f).SetEase(Ease.InSine))
+                // 7. 원위치로 복귀
+                .Append(transform.DOMove(_basePosition, 0.3f).SetEase(Ease.OutBack))
                 .OnComplete(() => onDone?.Invoke());
         }
 
