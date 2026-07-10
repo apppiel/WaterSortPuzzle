@@ -255,8 +255,8 @@ namespace WaterSortPuzzle.Game
             float segSize = twoRows ? 0.58f : 0.7f;
             float spacing = twoRows ? 0.92f : 1.1f;
 
-            // 지그재그 높이 차: 튜브 총 높이의 약 55%
-            float stagger = (_levelData.tubeCapacity - 1) * segSize * 0.55f;
+            // 지그재그 높이 차: 한 줄은 55%, 두 줄은 행 자체가 변화를 주므로 적용 안 함
+            float stagger = twoRows ? 0f : (_levelData.tubeCapacity - 1) * segSize * 0.55f;
 
             var views = new TubeView[count];
 

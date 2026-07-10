@@ -10,21 +10,21 @@ using WaterSortPuzzle.Data;
 
 public class LevelImporterWindow : EditorWindow
 {
-    // 전역 팔레트 (고정 11색)
-    // 인덱스: 0=빨강 1=주황 2=노랑 3=초록 4=파랑 5=남색 6=보라 7=분홍 8=흰색 9=검정 10=회색
+    // 전역 팔레트 (고정 11색 — 흰색 제외)
+    // 인덱스: 0=빨강 1=주황 2=노랑 3=초록 4=파랑 5=남색 6=보라 7=분홍 8=검정 9=회색 10=청록
     private static readonly Color[] GlobalPalette = new Color[]
     {
-        new Color(0.937f, 0.267f, 0.267f, 1f), // 0 빨강   #EF4444
-        new Color(0.976f, 0.451f, 0.086f, 1f), // 1 주황   #F97316
-        new Color(0.980f, 0.800f, 0.082f, 1f), // 2 노랑   #FACC15
-        new Color(0.133f, 0.773f, 0.369f, 1f), // 3 초록   #22C55E
-        new Color(0.231f, 0.510f, 0.965f, 1f), // 4 파랑   #3B82F6
-        new Color(0.388f, 0.400f, 0.945f, 1f), // 5 남색   #6366F1
-        new Color(0.659f, 0.333f, 0.969f, 1f), // 6 보라   #A855F7
-        new Color(0.925f, 0.286f, 0.600f, 1f), // 7 분홍   #EC4899
-        new Color(1.000f, 1.000f, 1.000f, 1f), // 8 흰색   #FFFFFF
-        new Color(0.094f, 0.094f, 0.106f, 1f), // 9 검정   #18181B
-        new Color(0.612f, 0.639f, 0.686f, 1f), // 10 회색  #9CA3AF
+        new Color(0.937f, 0.267f, 0.267f, 1f), // 0  빨강   #EF4444
+        new Color(0.976f, 0.451f, 0.086f, 1f), // 1  주황   #F97316
+        new Color(0.980f, 0.800f, 0.082f, 1f), // 2  노랑   #FACC15
+        new Color(0.133f, 0.773f, 0.369f, 1f), // 3  초록   #22C55E
+        new Color(0.231f, 0.510f, 0.965f, 1f), // 4  파랑   #3B82F6
+        new Color(0.388f, 0.400f, 0.945f, 1f), // 5  남색   #6366F1
+        new Color(0.659f, 0.333f, 0.969f, 1f), // 6  보라   #A855F7
+        new Color(0.925f, 0.286f, 0.600f, 1f), // 7  분홍   #EC4899
+        new Color(0.094f, 0.094f, 0.106f, 1f), // 8  검정   #18181B
+        new Color(0.612f, 0.639f, 0.686f, 1f), // 9  회색   #9CA3AF
+        new Color(0.078f, 0.722f, 0.651f, 1f), // 10 청록   #14B8A6
     };
 
     private string _input      = "";             // 붙여넣는 텍스트
