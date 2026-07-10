@@ -59,8 +59,8 @@ namespace WaterSortPuzzle.Game
         // 클리어 팝업 UI
         private ClearPopup _clearPopup;
 
-        // 튜브 6개 이하: 한 줄. 6개 초과: 두 줄로 전환하는 기준
-        private const int TwoRowThreshold = 6;
+        // 튜브 4개 이하: 한 줄. 5개 이상: 두 줄로 전환하는 기준 (상용 게임 표준)
+        private const int TwoRowThreshold = 5;
 
         // 씬 시작 시 한 번 호출된다. LevelData로 Board와 TubeView를 생성한다.
         private void Start()

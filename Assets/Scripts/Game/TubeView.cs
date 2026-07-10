@@ -28,6 +28,9 @@ namespace WaterSortPuzzle.Game
         // 선택 해제 시 돌아올 원래 월드 위치
         private Vector3 _basePosition;
 
+        // 세그먼트 한 칸 크기 (붓기 리프트 높이 계산에 사용)
+        private float _segmentSize;
+
         // 선택 시 위로 올라가는 거리 (월드 유닛)
         private const float SelectLiftY = 0.22f;
 
@@ -53,6 +56,7 @@ namespace WaterSortPuzzle.Game
         {
             _tube = tube;
             _palette = palette;
+            _segmentSize = segmentSize;
 
             // GameManager가 위치를 설정한 뒤 Init을 호출하므로 여기서 기준 위치를 기억한다
             _basePosition = transform.position;
@@ -197,7 +201,6 @@ namespace WaterSortPuzzle.Game
             // 병 스프라이트 기준 입구까지의 높이 (기울였을 때 입구 위치 계산용)
             const float NeckHeight  = 2.59f;
             const float PourAngle   = 65f;   // 붓기 각도 — 너무 크면 병끼리 겹침
-            const float LiftHeight  = 2.2f;  // 올리는 높이 — 높을수록 충돌 여유 생김
 
             // 오른쪽이면 시계방향(-), 왼쪽이면 반시계방향(+)
             float direction = (destTubePos.x > _basePosition.x) ? 1f : -1f;
@@ -206,10 +209,10 @@ namespace WaterSortPuzzle.Game
             // 기울였을 때 입구가 대상 병 위에 오도록 X 위치를 계산
             float mouthReach = NeckHeight * Mathf.Sin(PourAngle * Mathf.Deg2Rad);
 
-            // 대상 튜브가 위에 있으면 높이 차만큼 더 올리고, 아래에 있으면 그만큼 덜 올린다
-            float heightDiff = destTubePos.y - _basePosition.y;
-            float neededLift = Mathf.Max(LiftHeight + heightDiff, 0.8f); // 최소 0.8 확보
-            float liftY      = _basePosition.y + neededLift;
+            // 목적지 튜브 꼭대기(base + 세그먼트 전체 높이) 위로 올라가야 자연스럽게 붓는다
+            // 이미 그보다 높이 있으면 최소한(0.3)만 올려서 불필요한 상승을 막는다
+            float destTubeTop = destTubePos.y + (_tube.Capacity - 1) * _segmentSize;
+            float liftY = Mathf.Max(_basePosition.y, destTubeTop + 0.4f);
             Vector3 pourPos  = new Vector3(
                 destTubePos.x - direction * mouthReach,
                 liftY,
