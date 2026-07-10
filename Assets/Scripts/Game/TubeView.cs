@@ -205,15 +205,20 @@ namespace WaterSortPuzzle.Game
 
             // 기울였을 때 입구가 대상 병 위에 오도록 X 위치를 계산
             float mouthReach = NeckHeight * Mathf.Sin(PourAngle * Mathf.Deg2Rad);
+
+            // 대상 튜브가 위에 있으면 높이 차만큼 더 올리고, 아래에 있으면 그만큼 덜 올린다
+            float heightDiff = destTubePos.y - _basePosition.y;
+            float neededLift = Mathf.Max(LiftHeight + heightDiff, 0.8f); // 최소 0.8 확보
+            float liftY      = _basePosition.y + neededLift;
             Vector3 pourPos  = new Vector3(
                 destTubePos.x - direction * mouthReach,
-                _basePosition.y + LiftHeight,
+                liftY,
                 0f
             );
 
             DOTween.Sequence()
-                // 1. 제자리에서 위로 올리기
-                .Append(transform.DOMoveY(_basePosition.y + LiftHeight, 0.22f).SetEase(Ease.OutSine))
+                // 1. 제자리에서 위로 올리기 (대상 병보다 충분히 높이)
+                .Append(transform.DOMoveY(liftY, 0.22f).SetEase(Ease.OutSine))
                 // 2. 대상 병 위로 수평 이동
                 .Append(transform.DOMove(pourPos, 0.22f).SetEase(Ease.OutSine))
                 // 3. 기울여서 붓기 (~85도)

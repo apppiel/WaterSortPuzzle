@@ -242,6 +242,7 @@ namespace WaterSortPuzzle.Game
 
         // Tube 배열로 TubeView 오브젝트를 생성하고 화면 중앙에 배치한다.
         // 튜브가 6개 이하면 한 줄, 7개 이상이면 위/아래 두 줄로 배치한다.
+        // 3개 이상일 때 홀짝 인덱스에 Y 오프셋을 줘서 지그재그 배치로 심심함을 줄인다.
         private TubeView[] BuildViews(Tube[] tubes)
         {
             _square = CreateSquareSprite();
@@ -254,16 +255,24 @@ namespace WaterSortPuzzle.Game
             float segSize = twoRows ? 0.58f : 0.7f;
             float spacing = twoRows ? 0.92f : 1.1f;
 
+            // 지그재그 높이 차: 튜브 총 높이의 약 55%
+            float stagger = (_levelData.tubeCapacity - 1) * segSize * 0.55f;
+
             var views = new TubeView[count];
 
             if (!twoRows)
             {
-                // 한 줄 배치
+                // 한 줄 배치 (3개 이상이면 지그재그)
                 float totalWidth = (count - 1) * spacing;
-                float centerY    = -(_levelData.tubeCapacity - 1) * segSize * 0.5f;
+                // 지그재그로 위쪽 병이 HUD와 붙지 않도록 중심을 살짝 아래로 내린다
+                float centerY    = -(_levelData.tubeCapacity - 1) * segSize * 0.5f - stagger * 0.3f;
                 for (int i = 0; i < count; i++)
+                {
+                    // 3개 이상일 때 짝수 인덱스는 살짝 아래, 홀수 인덱스는 살짝 위
+                    float yOff = (count >= 3) ? (i % 2 == 0 ? -stagger : stagger) : 0f;
                     views[i] = SpawnTubeView(i, tubes[i], palette, segSize,
-                        new Vector3(-totalWidth / 2f + i * spacing, centerY, 0f));
+                        new Vector3(-totalWidth / 2f + i * spacing, centerY + yOff, 0f));
+                }
             }
             else
             {
@@ -273,24 +282,28 @@ namespace WaterSortPuzzle.Game
 
                 // 행 간격: 튜브 시각적 높이 + 여백
                 float tubeVisualHeight = (_levelData.tubeCapacity - 1) * segSize;
-                float rowGap  = tubeVisualHeight + segSize * 2.8f;
+                float rowGap      = tubeVisualHeight + segSize * 2.8f;
                 float baseCenterY = -(_levelData.tubeCapacity - 1) * segSize * 0.5f;
-                float bottomY = baseCenterY - rowGap * 0.5f;
-                float topY    = baseCenterY + rowGap * 0.5f;
+                float bottomY     = baseCenterY - rowGap * 0.5f;
+                float topY        = baseCenterY + rowGap * 0.5f;
 
-                // 아래 줄
+                // 아래 줄 (지그재그)
                 float bottomWidth = (bottomCount - 1) * spacing;
                 for (int i = 0; i < bottomCount; i++)
+                {
+                    float yOff = i % 2 == 0 ? -stagger : stagger;
                     views[i] = SpawnTubeView(i, tubes[i], palette, segSize,
-                        new Vector3(-bottomWidth / 2f + i * spacing, bottomY, 0f));
+                        new Vector3(-bottomWidth / 2f + i * spacing, bottomY + yOff, 0f));
+                }
 
-                // 위 줄
+                // 위 줄 (지그재그 — 아래 줄과 위상 반전해서 더 자연스럽게)
                 float topWidth = (topCount - 1) * spacing;
                 for (int i = 0; i < topCount; i++)
                 {
-                    int idx = bottomCount + i;
+                    int   idx  = bottomCount + i;
+                    float yOff = i % 2 == 0 ? stagger : -stagger; // 반전
                     views[idx] = SpawnTubeView(idx, tubes[idx], palette, segSize,
-                        new Vector3(-topWidth / 2f + i * spacing, topY, 0f));
+                        new Vector3(-topWidth / 2f + i * spacing, topY + yOff, 0f));
                 }
             }
 
