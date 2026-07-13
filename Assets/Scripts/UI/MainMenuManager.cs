@@ -74,7 +74,8 @@ namespace WaterSortPuzzle.UI
                 .AppendInterval(delay)
                 .Append(DOTween.To(() => cg.alpha, v => cg.alpha = v, 1f, 0.35f))
                 .Join(btn.DOScale(Vector3.one, 0.45f).SetEase(Ease.OutBack))
-                .OnComplete(onDone);
+                .OnComplete(onDone)
+                .SetLink(btn.gameObject);
         }
 
         // 플레이 버튼 등장 후 살짝 위아래로 둥실거리는 루프 애니메이션
@@ -88,7 +89,8 @@ namespace WaterSortPuzzle.UI
                 v => _playButton.anchoredPosition = v,
                 new Vector2(basePos.x, basePos.y + 12f),
                 1.4f
-            ).SetEase(Ease.InOutSine).SetLoops(-1, LoopType.Yoyo);
+            ).SetEase(Ease.InOutSine).SetLoops(-1, LoopType.Yoyo)
+             .SetLink(_playButton.gameObject);
         }
 
         // 배경 위에 반투명 거품들이 천천히 떠오르는 효과
@@ -139,8 +141,9 @@ namespace WaterSortPuzzle.UI
             float startX = Random.Range(-430f, 430f);
             rect.anchoredPosition = new Vector2(startX, startY);
 
-            // 초기 딜레이 후 떠오르기 시작
-            DOVirtual.DelayedCall(initialDelay, () => LoopBubble(rect, img, color, startY));
+            // 초기 딜레이 후 떠오르기 시작 (오브젝트 파괴 시 자동 취소)
+            DOVirtual.DelayedCall(initialDelay, () => LoopBubble(rect, img, color, startY))
+                .SetLink(img.gameObject);
         }
 
         // 거품 하나의 떠오르기 → 페이드 아웃 → 리셋 루프
@@ -167,7 +170,8 @@ namespace WaterSortPuzzle.UI
                     c.a = v;
                     img.color = c;
                 }).SetDelay(duration * 0.45f))
-                .OnComplete(() => LoopBubble(rect, img, baseColor, startY));
+                .OnComplete(() => LoopBubble(rect, img, baseColor, startY))
+                .SetLink(img.gameObject); // 오브젝트 파괴 시 tween 자동 종료
         }
 
         // 원형 스프라이트를 코드로 생성한다 (거품 모양용)

@@ -20,14 +20,14 @@ namespace WaterSortPuzzle.UI
         public void OnPointerDown(PointerEventData eventData)
         {
             _rect.DOKill();
-            _rect.DOScale(_baseScale * 0.88f, 0.08f).SetEase(Ease.OutQuad);
+            _rect.DOScale(_baseScale * 0.88f, 0.08f).SetEase(Ease.OutQuad).SetLink(gameObject);
         }
 
         // 뗄 때 탄력 있게 원래 크기로 돌아온다
         public void OnPointerUp(PointerEventData eventData)
         {
             _rect.DOKill();
-            _rect.DOScale(_baseScale, 0.3f).SetEase(Ease.OutBack);
+            _rect.DOScale(_baseScale, 0.3f).SetEase(Ease.OutBack).SetLink(gameObject);
         }
     }
 }

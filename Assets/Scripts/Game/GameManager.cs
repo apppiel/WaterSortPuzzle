@@ -1,6 +1,8 @@
+using System;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.SceneManagement;
+using UnityEngine.UI;
 using DG.Tweening;
 using TMPro;
 using WaterSortPuzzle.Core;
@@ -38,6 +40,9 @@ namespace WaterSortPuzzle.Game
         // 효과음 재생 담당 (인스펙터에서 연결)
         [SerializeField] private AudioManager _audioManager;
 
+        // 리셋 버튼 (인스펙터에서 연결) — 첫 이동 전까지 비활성화
+        [SerializeField] private Button _resetButton;
+
         // Core 게임 상태 (튜브 집합 + 이동 히스토리)
         private Board _board;
 
@@ -65,6 +70,12 @@ namespace WaterSortPuzzle.Game
         // 씬 시작 시 한 번 호출된다. LevelData로 Board와 TubeView를 생성한다.
         private void Start()
         {
+            // AdManager 싱글턴이 없으면 생성한다 (첫 게임 씬 진입 시 한 번만)
+            if (AdManager.Instance == null)
+            {
+                var adGo = new GameObject("AdManager");
+                adGo.AddComponent<AdManager>();
+            }
             // 레벨선택 씬에서 저장한 레벨 번호를 읽어온다. 없으면 0번(첫 레벨)
             _currentLevelIndex = PlayerPrefs.GetInt("SelectedLevel", 0);
 
@@ -84,6 +95,10 @@ namespace WaterSortPuzzle.Game
             _board = new Board(tubes);      // 게임 상태 초기화
             _tubeViews = BuildViews(tubes); // 화면 오브젝트 생성
             BuildClearPopup();              // 클리어 팝업 생성 (평소엔 숨김)
+
+            // 이동 전까지 리셋 버튼 비활성화
+            if (_resetButton != null)
+                _resetButton.interactable = false;
         }
 
         // 매 프레임 호출된다. 터치 및 마우스 클릭 입력을 처리한다.
@@ -145,7 +160,28 @@ namespace WaterSortPuzzle.Game
                 int moved = _board.TryPour(from, index);
 
                 if (moved > 0)
+                {
+                    // 첫 이동 성공 시 리셋 버튼 활성화
+                    if (_resetButton != null)
+                        _resetButton.interactable = true;
                     PlayPourAnimation(from, index);
+                }
+            }
+        }
+
+        // HUD의 리셋 버튼에서 호출한다.
+        // 보상형 광고를 시청하면 현재 레벨을 처음부터 다시 시작한다.
+        public void HandleReset()
+        {
+            if (_isAnimating || _gameOver) return;
+
+            var ad = AdManager.Instance;
+            if (ad != null)
+            {
+                ad.ShowRewarded(
+                    onRewarded: () => SceneLoader.LoadGame(_currentLevelIndex),
+                    onFailed:   () => Debug.Log("보상형 광고 미준비 — 리셋 불가")
+                );
             }
         }
 
@@ -216,10 +252,16 @@ namespace WaterSortPuzzle.Game
                 onNext: () =>
                 {
                     int nextIndex = _currentLevelIndex + 1;
-                    if (nextIndex < _levels.Length)
-                        SceneLoader.LoadGame(nextIndex);
+                    Action navigate = nextIndex < _levels.Length
+                        ? (Action)(() => SceneLoader.LoadGame(nextIndex))
+                        : SceneLoader.LoadLevelSelect;
+
+                    // 전면 광고 시청 후 다음 씬으로 이동 (광고 없으면 바로 이동)
+                    var ad = AdManager.Instance;
+                    if (ad != null)
+                        ad.ShowInterstitial(navigate);
                     else
-                        SceneLoader.LoadLevelSelect();
+                        navigate();
                 },
                 font: koreanFont
             );
