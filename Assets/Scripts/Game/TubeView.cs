@@ -21,8 +21,8 @@ namespace WaterSortPuzzle.Game
         // 각 슬롯 상단에 얹히는 얇은 하이라이트 선 (물 표면 반사 효과)
         private SpriteRenderer[] _highlights;
 
-        // 선택 하이라이트 SpriteRenderer (병 뒤에서 노랗게 빛남)
-        private SpriteRenderer _selectionHighlight;
+        // 선택 시 스케일 tween (선택→해제 반복 시 중첩 방지용으로 보관)
+        private Tween _scaleTween;
 
         // 선택 해제 시 돌아올 원래 월드 위치
         private Vector3 _basePosition;
@@ -35,12 +35,6 @@ namespace WaterSortPuzzle.Game
 
         // 빈 슬롯 색 (연한 회색 반투명)
         private static readonly Color EmptySlotColor = new(0.85f, 0.85f, 0.85f, 0.4f);
-
-        // 선택됐을 때 하이라이트 색 (노란색 반투명)
-        private static readonly Color HighlightSelected = new(1f, 0.9f, 0.2f, 0.5f);
-
-        // 선택 안 됐을 때 하이라이트 색 (완전 투명)
-        private static readonly Color HighlightNormal = new(0f, 0f, 0f, 0f);
 
         // 튜브 뷰를 초기화한다. GameManager가 Start()에서 호출한다.
         // index: 튜브 인덱스 (클릭 감지용)
@@ -71,16 +65,6 @@ namespace WaterSortPuzzle.Game
 
             var clickTarget = bgGo.AddComponent<TubeClickTarget>();
             clickTarget.TubeIndex = index;
-
-            // ── 선택 하이라이트 (병 뒤에서 빛나는 효과) ────────
-            var hlGo = new GameObject("SelectionHighlight");
-            hlGo.transform.SetParent(transform, false);
-            hlGo.transform.localPosition = new Vector3(0f, (tube.Capacity - 1) * s * 0.5f, 0f);
-            hlGo.transform.localScale = new Vector3(s * 1.3f, tube.Capacity * s + s * 0.4f, 1f);
-            _selectionHighlight = hlGo.AddComponent<SpriteRenderer>();
-            _selectionHighlight.sprite = square;
-            _selectionHighlight.color = HighlightNormal; // 평소엔 투명
-            _selectionHighlight.sortingOrder = -10;      // 슬롯보다 뒤
 
             // ── SpriteMask: 세그먼트를 병 내부 모양으로 클리핑 ──
             // 마스크 스프라이트의 알파값이 1인 영역에서만 세그먼트가 보인다.
@@ -176,16 +160,23 @@ namespace WaterSortPuzzle.Game
         }
 
         // 선택 상태를 시각적으로 표시한다.
-        // selected=true면 위로 올라오며 하이라이트, false면 원위치로 복귀.
+        // selected=true면 위로 올라오며 살짝 커지고, false면 원위치·원크기로 복귀.
         public void SetSelected(bool selected)
         {
-            _selectionHighlight.color = selected ? HighlightSelected : HighlightNormal;
-
             // 선택 시 살짝 위로 올라옴 (OutBack → 약간 튀는 느낌)
             // 해제 시 부드럽게 원래 위치로 복귀
             float targetY = selected ? _basePosition.y + SelectLiftY : _basePosition.y;
             transform.DOMoveY(targetY, 0.18f)
                      .SetEase(selected ? Ease.OutBack : Ease.OutQuad);
+
+            // 진행 중이던 스케일 tween 정리 (연속 선택/해제 중첩 방지)
+            if (_scaleTween != null && _scaleTween.IsActive())
+                _scaleTween.Kill();
+
+            // 선택 시 1.05로 커지고, 해제 시 1로 복귀 (한 번만, 반복 없음)
+            float targetScale = selected ? 1.05f : 1f;
+            _scaleTween = transform.DOScale(targetScale, 0.18f)
+                                   .SetEase(selected ? Ease.OutBack : Ease.OutQuad);
         }
 
         // 붓기 애니메이션: 위로 올린 뒤 옆으로 이동해 기울여서 붓고 원위치로 돌아온다.
@@ -214,22 +205,35 @@ namespace WaterSortPuzzle.Game
                 0f
             );
 
+            // 총 재생 시간 ≈ 0.90s. 퍼즐 iteration 속도를 위해 각 단계 단축.
+            // (예전엔 1.39s여서 반복 시도 시 답답함이 컸다)
             DOTween.Sequence()
                 // 1. 제자리에서 위로 올리기 (대상 병보다 충분히 높이)
-                .Append(transform.DOMoveY(liftY, 0.22f).SetEase(Ease.OutSine))
+                .Append(transform.DOMoveY(liftY, 0.15f).SetEase(Ease.OutSine))
                 // 2. 대상 병 위로 수평 이동
-                .Append(transform.DOMove(pourPos, 0.22f).SetEase(Ease.OutSine))
-                // 3. 기울여서 붓기 (~85도)
-                .Append(transform.DORotate(new Vector3(0f, 0f, zAngle), 0.28f).SetEase(Ease.OutSine))
+                .Append(transform.DOMove(pourPos, 0.15f).SetEase(Ease.OutSine))
+                // 3. 기울여서 붓기 (~65도)
+                .Append(transform.DORotate(new Vector3(0f, 0f, zAngle), 0.18f).SetEase(Ease.OutSine))
                 // 4. 붓기 콜백 (양쪽 튜브 화면 갱신)
                 .AppendCallback(() => onPoured?.Invoke())
-                // 5. 기울인 채로 잠깐 유지
-                .AppendInterval(0.15f)
+                // 5. 기울인 채로 잠깐 유지 (색이 넘어간 걸 눈으로 확인할 최소 시간)
+                .AppendInterval(0.08f)
                 // 6. 기울기 복귀
-                .Append(transform.DORotate(Vector3.zero, 0.22f).SetEase(Ease.InSine))
+                .Append(transform.DORotate(Vector3.zero, 0.14f).SetEase(Ease.InSine))
                 // 7. 원위치로 복귀
-                .Append(transform.DOMove(_basePosition, 0.3f).SetEase(Ease.OutBack))
+                .Append(transform.DOMove(_basePosition, 0.20f).SetEase(Ease.OutBack))
                 .OnComplete(() => onDone?.Invoke());
+        }
+
+        // 붓기가 실패했을 때(대상 튜브가 색을 받을 수 없을 때) 호출한다.
+        // 좌우로 짧게 흔들려 "여기엔 못 붓는다"는 시각적 피드백을 준다.
+        public void PlayFailShake()
+        {
+            // 진행 중인 shake가 있으면 정리하고 기준 위치로 리셋 (연속 실패 대비)
+            transform.DOKill();
+            transform.position = _basePosition;
+            transform.DOShakePosition(0.3f, new Vector3(0.12f, 0f, 0f), 14, 0f, false, true)
+                     .OnComplete(() => transform.position = _basePosition);
         }
 
         // 클리어 시 통통 튀는 애니메이션을 재생한다.

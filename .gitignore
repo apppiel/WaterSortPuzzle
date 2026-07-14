@@ -6,6 +6,9 @@ Assets/Layer Lab.meta
 Assets/Screenshots/
 Assets/Screenshots.meta
 
+# 레벨 생성기가 저장하는 풀이 텍스트 (로컬 참고용)
+/LevelSolutions/
+
 # Unity .gitignore Template
 # Source: https://github.com/github/gitignore/blob/main/Unity.gitignore
 # Last synced: 2025-12-18

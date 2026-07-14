@@ -3,6 +3,49 @@
 Water Sort Puzzle 게임 프로젝트 가이드.
 Claude Code가 이 저장소에서 작업할 때 따라야 할 구조와 규칙을 정의한다.
 
+---
+
+## 🔥 다음 세션 시작 시 (2026-07-14 마감 시점)
+
+### 상황
+- **100 레벨 전부 완성** + 갤럭시에서 **첫 실기 빌드 성공** (앱 실행됨)
+- 다만 **메인 메뉴 UI가 갤럭시(1080x2340)에서 깨져 보임** (버튼 겹침) — 진행 중이었음
+- 유저가 잠시 자리 비움. 여기서 재개.
+
+### 최우선: 메인 메뉴 UI 정렬 수정
+`Assets/Scenes/MainMenuScene.unity`
+
+**문제**: `GameMenu.png` 배경 이미지(1080x1920 native)가 1080x2340 화면에 stretch되면서 배경에 baked된 PLAY/SETTING 버튼 rectangle 위치가 어긋남. 그 위에 오버레이된 PlayButton/SettingsButton (플레이 삼각형 아이콘 / 기어 아이콘)이 배경의 rect들과 정렬 안 됨.
+
+**계획했던 수정** (MCP set_property로 시도하다 유저가 자리 비움):
+```
+PlayButton (instanceID 씬마다 다름 — 이름으로 찾기):
+  anchoredPosition: (-313, -129)  ← Y를 -40 → -129로
+
+SettingsButton:
+  anchor/pivot을 (1,1) → (0.5, 0.5)로 리셋
+  anchoredPosition: (-313, -538)
+```
+
+이 좌표는 갤럭시 스크린샷에서 시각적으로 추정한 값 (배경 rect 중심 위치). 실제 적용해보고 안 맞으면 다시 조정.
+
+**더 근본적인 대안 (권장)**: `Assets/Scenes/MainMenuScene.unity`의 Background Image의 `preserveAspect = true`로 설정. 그러면 20:9 화면에서 배경이 letterbox처럼 세로 여백만 생기고 원래 1080x1920 비율 유지 → 버튼 위치 그대로 정렬 유지됨. 이걸 먼저 시도.
+
+### 그 다음
+`RELEASE_CHECKLIST.md` 참조. Phase 우선순위:
+1. 정식 앱 아이콘 (현재 임시)
+2. 개인정보 처리방침 URL
+3. UMP SDK (GDPR)
+4. 리워드 코드 시스템 (Level 100 클리어 시 Firebase 발급) — No1 게임 참고 코드 있음
+5. 튜토리얼 (첫 레벨 손가락 유도) — 리텐션 결정적
+
+### 알아둘 것
+- **AdMob App ID는 `Assets/GoogleMobileAds/Resources/GoogleMobileAdsSettings.asset` 에 설정.** Custom Manifest 쓰지 말 것 (launcher activity 사라져 앱 실행 X).
+- **레벨 생성기는 랜덤 분포 + solver 검증 방식.** reverse-shuffle 불가능한 게임 룰. 최소 빈 튜브 2개 필수.
+- **파일명 규칙**: `LevelData_NN.asset` = 0-based, `level_NN.txt` = 1-based (게임 UI 번호랑 매칭).
+
+---
+
 ## 프로젝트 개요
 
 - 장르: Water Sort Puzzle (색깔 물 분류 퍼즐)
@@ -160,6 +203,8 @@ UnityEngine을 참조하지 않으므로, 컴파일러가 경계를 강제한다
 
 ### TODO
 
+> **출시 관련 상세 체크리스트는 `RELEASE_CHECKLIST.md` 참조.**
+
 #### 비주얼 / UX
 - [ ] 튜브 스프라이트 개선 (현재 코드 생성 임시 에셋)
 - [x] 색 세그먼트를 물처럼 보이는 비주얼로 교체
@@ -168,25 +213,49 @@ UnityEngine을 참조하지 않으므로, 컴파일러가 경계를 강제한다
 - [x] 설정 메뉴 (사운드 등)
 - [x] Safe Area 대응 (노치/홈 인디케이터)
 - [ ] 로딩 씬 — 배경 이미지/로고 추가
+- [ ] **메인 메뉴 UI 정렬 수정** — 갤럭시(1080x2340) 등 20:9 화면에서 GameMenu.png 배경이 stretch되며 PlayButton/SettingsButton 아이콘 위치 어긋남. anchoredPosition 조정 or 배경 preserveAspect 방식으로 재설계 필요
 
 #### 레벨
-- [ ] 레벨 데이터 다수 제작 (난이도 순, 100개 목표) — 현재 작업 중 (30개 이상)
+- [x] 레벨 데이터 다수 제작 (난이도 순, 100개) — 완료 (1~50 수동, 51~100 생성기)
 
 #### 게임플레이
-- [ ] 힌트 기능
 - [x] 레벨 리셋 버튼 (보상형 광고 시청 후 리셋 — GameManager.HandleReset())
-- [ ] Undo 3회 제한 — 코드 완료(GameManager), 인스펙터에서 `_undoButton` 필드에 Undo 버튼 연결 필요
+- [x] Undo 3회 제한 (GameManager._remainingUndos, 인스펙터 연결 완료)
+- [x] 붓기 실패 피드백 (대상 튜브 shake + fail 사운드 슬롯)
+- [x] 메뉴 팝업 (게임 중 레벨선택으로 복귀 — MenuPopup)
+- [x] 붓기 애니메이션 속도 최적화 (1.39s → 0.90s)
+
+#### 리워드 (기획 중, 미구현)
+- [ ] 100 레벨 클리어 시 랜덤 코드 발급 → 실물 상품
+  - Firebase Firestore로 device ID 기준 중복 발급 방지
+  - No1 게임의 Firestore 프로젝트와 통합 계획
+  - `RewardManager.cs` (No1 게임 참고 코드 있음)
+  - 결정 필요: 게임별 코드 vs 통합 코드, UI(uGUI 포팅)
 
 #### 광고 / 수익화
 - [x] Google AdMob 연동 (SDK v11.2.0)
 - [x] 전면 광고 — 레벨 클리어 후 "다음 레벨" 버튼 시 노출
 - [x] 보상형 광고 — 리셋 버튼
+- [ ] UMP SDK (GDPR 동의 UI) — EU 유저 대응, AdMob 승인 조건
 
 > **⚠️ 빌드 주의**: `Development Build` 체크 시 Google 테스트 광고 ID 자동 사용.
 > 릴리즈 빌드는 반드시 `Development Build` **해제** 후 빌드할 것.
 > (AdManager.cs에서 `Debug.isDebugBuild`로 자동 분기)
 
+> **⚠️ AdMob App ID 설정 방법**: `Assets/GoogleMobileAds/Resources/GoogleMobileAdsSettings.asset` 의 `adMobAndroidAppId` 필드에 입력.
+> `Assets/Plugins/Android/AndroidManifest.xml` 에 하드코딩 하지 말 것 — Custom Main Manifest가 활성화되면 Unity 기본 manifest를 대체해서 launcher activity가 사라져 앱이 실행 안 됨.
+
 #### 기술
 - [x] 사운드 (붓기 효과음, BGM)
 - [x] 모바일 빌드 설정 (Android / iOS)
 - [x] 터치 입력 대응 (Pointer.current로 마우스/터치 통합)
+- [x] Android 빌드 성공 (첫 실기 테스트: 갤럭시에서 실행 확인)
+
+### 레벨 생성기 (Editor 툴)
+
+- `Assets/Editor/LevelGeneratorWindow.cs` — 랜덤 분포 + solver 검증 방식
+  - reverse-shuffle 불가능 (게임 룰상 완성 상태에서 forward 이동은 permutation만)
+  - **최소 빈 튜브 2개 필수** (1개면 random 분포가 대부분 unsolvable)
+- `Assets/Editor/WaterSortSolver.cs` — BFS + canonical hashing, 최단 풀이 반환
+- 생성 시 각 레벨의 풀이 시퀀스가 `LevelSolutions/level_NN.txt` 로 저장됨 (.gitignore)
+- **파일명 규칙**: `LevelData_NN.asset` 은 0-based (NN=99 → 레벨 100), `level_NN.txt` 는 1-based (매칭됨: 게임 UI 번호)

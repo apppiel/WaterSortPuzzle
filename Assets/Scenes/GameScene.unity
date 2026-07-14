@@ -155,7 +155,7 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: -432, y: 847}
-  m_SizeDelta: {x: 200, y: 200}
+  m_SizeDelta: {x: 100, y: 100}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &92817880
 MonoBehaviour:
@@ -200,7 +200,19 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 92817881}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 783727300}
+        m_TargetAssemblyTypeName: WaterSortPuzzle.Game.GameManager, WaterSortPuzzle.Game
+        m_MethodName: HandleOpenMenu
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!114 &92817881
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -214,14 +226,14 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
   m_Material: {fileID: 0}
-  m_Color: {r: 0, g: 0, b: 0, a: 1}
+  m_Color: {r: 1, g: 0.7607843, b: 0.7607843, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: c2b3a365a36d44daa967c204b8c18207, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 0e89f78e71f5979439b0c05bb022f87b, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -411,8 +423,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 1, y: 1}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: -100, y: -100}
-  m_SizeDelta: {x: 200, y: 200}
+  m_AnchoredPosition: {x: -100, y: -118}
+  m_SizeDelta: {x: 100, y: 100}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &211183370
 MonoBehaviour:
@@ -490,7 +502,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: 88334acda8cbf4c788f32bd5afa828d1, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 91f687269d00d8548a0c2a0e7e4736e1, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -799,12 +811,74 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 285212d96c1414e70902ea2464758b4b, type: 2}
   - {fileID: 11400000, guid: 60eb9c6125a99478fbf4e0a2e28a63ae, type: 2}
   - {fileID: 11400000, guid: e108247bfd26b4251ae35ec6aa045b50, type: 2}
+  - {fileID: 11400000, guid: ea92cb68e9b1b43e086a08dc971d4eaf, type: 2}
+  - {fileID: 11400000, guid: 4642ea280e2f24820a58c24c3947d7f5, type: 2}
+  - {fileID: 11400000, guid: be39dc94e1b0e4c4287a506eb4b89480, type: 2}
+  - {fileID: 11400000, guid: 2f0166c31d4094686aa0ab4fa9ab9bda, type: 2}
+  - {fileID: 11400000, guid: 12bfda424918a4d9e81cfe21fe0f91ed, type: 2}
+  - {fileID: 11400000, guid: a8d32edc7087e4635ba602259f6aeee7, type: 2}
+  - {fileID: 11400000, guid: 01dfaf3a0bd9b4baa87c5a803f609e41, type: 2}
+  - {fileID: 11400000, guid: 3b664ed4f7fcb4726bb6ca0a8bae4324, type: 2}
+  - {fileID: 11400000, guid: 14d3df826c7074b23af1889e046e3310, type: 2}
+  - {fileID: 11400000, guid: af4de1355a8354e449ee3344d7f99f44, type: 2}
+  - {fileID: 11400000, guid: 67f82daf0c31f4f6ab58ae97ee943c2c, type: 2}
+  - {fileID: 11400000, guid: a2236cb6f6ff74860996ae2ec96b8505, type: 2}
+  - {fileID: 11400000, guid: 96277c8dd73234b85b2936a0ff844a43, type: 2}
+  - {fileID: 11400000, guid: 6515db28c1169419db35ad5254b60296, type: 2}
+  - {fileID: 11400000, guid: 1ada7fd6c4c934bd3b5965970e1a78b3, type: 2}
+  - {fileID: 11400000, guid: cc14d5ba537924da28d265d14a747570, type: 2}
+  - {fileID: 11400000, guid: ec1728c75b9f4438b8b2a4f2a59183f6, type: 2}
+  - {fileID: 11400000, guid: b62b650f9d8c14708b1caf9d8fd9cb31, type: 2}
+  - {fileID: 11400000, guid: 61374331fce6e478993b471fbe90e28d, type: 2}
+  - {fileID: 11400000, guid: f92c9f6b05a9840628e11325943c1626, type: 2}
+  - {fileID: 11400000, guid: ed9ba393b8e764a6db4d82e931507b4d, type: 2}
+  - {fileID: 11400000, guid: 68364afaba1614309aada8622798b447, type: 2}
+  - {fileID: 11400000, guid: 5894ec9a5afd548cd875a96b3d9988e1, type: 2}
+  - {fileID: 11400000, guid: ee0dc9e24d77c4ebd8311dad6b27acf8, type: 2}
+  - {fileID: 11400000, guid: 65a4a29c149644b67bcb190628a78c5e, type: 2}
+  - {fileID: 11400000, guid: 4016a1975668e4457954513490d8efba, type: 2}
+  - {fileID: 11400000, guid: 31bf27d89a1fb492daf937a95aa74bb0, type: 2}
+  - {fileID: 11400000, guid: f5c7338ac7a5744059740b26f9c23a6f, type: 2}
+  - {fileID: 11400000, guid: d5803788645e84867b48e007188e0a5b, type: 2}
+  - {fileID: 11400000, guid: 55a1244def6db497fbf7599ee9562dc7, type: 2}
+  - {fileID: 11400000, guid: 70fffd0064f06451a9f66208605e9424, type: 2}
+  - {fileID: 11400000, guid: 9ee821cea7b0a4a10a14f1e057e4e717, type: 2}
+  - {fileID: 11400000, guid: a04b0d0851a2947dc85667b3c00740fa, type: 2}
+  - {fileID: 11400000, guid: 9eeddf80c1cf74e169b518fd454c5357, type: 2}
+  - {fileID: 11400000, guid: 955a3643f0cf84c699ff01309f17ae19, type: 2}
+  - {fileID: 11400000, guid: 91e90821d68124d4d986aab5862e3416, type: 2}
+  - {fileID: 11400000, guid: 87a3d5cdeaf0c479290baa0d16b187ef, type: 2}
+  - {fileID: 11400000, guid: 08bb2073ba2a24f2bb845e07411f4a12, type: 2}
+  - {fileID: 11400000, guid: aeee25d9bcd464948b3bc8ecb53242e7, type: 2}
+  - {fileID: 11400000, guid: 167934def7dd44b3191688336b0c9e99, type: 2}
+  - {fileID: 11400000, guid: 0783c3e2a67184717a90ea91bea0bc9f, type: 2}
+  - {fileID: 11400000, guid: 2d69627d8efac43968035bf0f6447502, type: 2}
+  - {fileID: 11400000, guid: 36e100cca4dee4c598450c957ce4410c, type: 2}
+  - {fileID: 11400000, guid: c6ca51544a7514d91ac44c4fa8374a0d, type: 2}
+  - {fileID: 11400000, guid: 818adbf2c6bbe457a8e88bd82e1bf33e, type: 2}
+  - {fileID: 11400000, guid: 73e4c64f13cbe445bab0b62522dbb728, type: 2}
+  - {fileID: 11400000, guid: 0e223ead0fb0049b9ab6b4d8d26680de, type: 2}
+  - {fileID: 11400000, guid: 7d6cd9348ac254d239ec5f1ec853b4ab, type: 2}
+  - {fileID: 11400000, guid: efd2f0cd8b2454fc981ffb02a98a4b71, type: 2}
+  - {fileID: 11400000, guid: 7f496f2c1fc4c4deab1530f42a4d9751, type: 2}
+  - {fileID: 11400000, guid: cbfd6fa7d6728454a8eb47bd7fb58f74, type: 2}
+  - {fileID: 11400000, guid: f6996c75271cb4f82bfef7f8d51e36a2, type: 2}
+  - {fileID: 11400000, guid: a19e699f4e88942cea6485420f7a41bc, type: 2}
+  - {fileID: 11400000, guid: 0a2a8319303604f20a389efd6cb82c8a, type: 2}
+  - {fileID: 11400000, guid: 26ea30558fa1340a78251e0ee76d0626, type: 2}
+  - {fileID: 11400000, guid: 75ba0458fff124e658ab854ceb71e800, type: 2}
+  - {fileID: 11400000, guid: fb2e53507f0984ce2b806dbb36ec6fcd, type: 2}
+  - {fileID: 11400000, guid: a213a5fcf13414a259228ab9283fce93, type: 2}
+  - {fileID: 11400000, guid: 378aa1ae8d83b4bff97e26d336534a27, type: 2}
+  - {fileID: 11400000, guid: 55d1621bc3dbd4b05af9def7253f66ba, type: 2}
   tubeSprite: {fileID: 21300000, guid: c1cfe6432c4be43acb2f285844396a4b, type: 3}
   _tubeMask: {fileID: 21300000, guid: a5d073d6d4aaf4fd1a3ccbd8c7a4e5c9, type: 3}
   koreanFont: {fileID: 11400000, guid: 215a29a15dc9d41549087d1c9affc4d7, type: 2}
   _levelText: {fileID: 131596548}
   _audioManager: {fileID: 1330186709}
   _resetButton: {fileID: 2136803241}
+  _undoButton: {fileID: 211183370}
+  _menuButton: {fileID: 92817880}
 --- !u!4 &783727301
 Transform:
   m_ObjectHideFlags: 0
@@ -1085,6 +1159,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: WaterSortPuzzle.Game::WaterSortPuzzle.Game.AudioManager
   _selectClip: {fileID: 8300000, guid: ca35bb2cc4a654633bd87b623e4c5400, type: 3}
   _pourClip: {fileID: 8300000, guid: 6600815534f9e4a30aee91252d58b039, type: 3}
+  _failClip: {fileID: 0}
   _clearClip: {fileID: 8300000, guid: 52320e590bf774734a288886eba557ba, type: 3}
 --- !u!82 &1330186710
 AudioSource:
