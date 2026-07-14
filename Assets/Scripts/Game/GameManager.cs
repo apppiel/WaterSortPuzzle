@@ -43,6 +43,15 @@ namespace WaterSortPuzzle.Game
         // 리셋 버튼 (인스펙터에서 연결) — 첫 이동 전까지 비활성화
         [SerializeField] private Button _resetButton;
 
+        // Undo 버튼 (인스펙터에서 연결) — 횟수 소진 시 비활성화
+        [SerializeField] private Button _undoButton;
+
+        // 레벨당 Undo 최대 횟수
+        private const int MaxUndoCount = 3;
+
+        // 남은 Undo 횟수
+        private int _remainingUndos;
+
         // Core 게임 상태 (튜브 집합 + 이동 히스토리)
         private Board _board;
 
@@ -79,10 +88,19 @@ namespace WaterSortPuzzle.Game
             // 레벨선택 씬에서 저장한 레벨 번호를 읽어온다. 없으면 0번(첫 레벨)
             _currentLevelIndex = PlayerPrefs.GetInt("SelectedLevel", 0);
 
-            // 유효한 인덱스인지 확인 후 레벨 데이터 설정
-            if (_levels == null || _levels.Length == 0 || _currentLevelIndex >= _levels.Length)
+            // 레벨 데이터가 아예 없으면 메인 메뉴로 복귀 (인스펙터 설정 누락 등)
+            if (_levels == null || _levels.Length == 0)
             {
-                Debug.LogError("LevelData가 설정되지 않았거나 인덱스가 범위를 벗어났습니다.");
+                Debug.LogError("LevelData가 설정되지 않았습니다. 메인 메뉴로 복귀합니다.");
+                SceneLoader.LoadMainMenu();
+                return;
+            }
+            // 선택된 인덱스가 범위를 벗어나면 레벨 선택으로 복귀
+            // (LevelSelect의 팬텀 버튼·저장 데이터 오염 등으로 유저가 갇히지 않도록 방어)
+            if (_currentLevelIndex >= _levels.Length)
+            {
+                Debug.LogWarning($"선택된 레벨({_currentLevelIndex + 1})이 존재하지 않습니다. 레벨 선택으로 복귀합니다.");
+                SceneLoader.LoadLevelSelect();
                 return;
             }
             _levelData = _levels[_currentLevelIndex];
@@ -99,6 +117,9 @@ namespace WaterSortPuzzle.Game
             // 이동 전까지 리셋 버튼 비활성화
             if (_resetButton != null)
                 _resetButton.interactable = false;
+
+            // Undo 횟수 초기화
+            _remainingUndos = MaxUndoCount;
         }
 
         // 매 프레임 호출된다. 터치 및 마우스 클릭 입력을 처리한다.
@@ -185,12 +206,18 @@ namespace WaterSortPuzzle.Game
             }
         }
 
-        // HUD의 Undo 버튼에서 호출한다. Board의 마지막 이동을 되돌리고 모든 뷰를 갱신한다.
+        // HUD의 Undo 버튼에서 호출한다. 최대 3회까지 되돌릴 수 있다.
         public void HandleUndo()
         {
-            // 애니메이션 중에는 Undo 불가
-            if (_isAnimating) return;
+            // 클리어 후에는 Undo 금지 (승리 상태에서 되돌리면 팝업/상태가 어긋남)
+            if (_gameOver || _isAnimating || _remainingUndos <= 0) return;
             if (!_board.TryUndo()) return;
+
+            _remainingUndos--;
+
+            // 횟수 소진 시 버튼 비활성화
+            if (_undoButton != null)
+                _undoButton.interactable = _remainingUndos > 0;
 
             // 어느 튜브가 바뀌었는지 모르므로 전체 갱신
             foreach (var view in _tubeViews)
@@ -283,7 +310,7 @@ namespace WaterSortPuzzle.Game
         }
 
         // Tube 배열로 TubeView 오브젝트를 생성하고 화면 중앙에 배치한다.
-        // 튜브가 6개 이하면 한 줄, 7개 이상이면 위/아래 두 줄로 배치한다.
+        // 튜브가 4개 이하면 한 줄, 5개 이상이면 위/아래 두 줄로 배치한다(TwoRowThreshold 참조).
         // 3개 이상일 때 홀짝 인덱스에 Y 오프셋을 줘서 지그재그 배치로 심심함을 줄인다.
         private TubeView[] BuildViews(Tube[] tubes)
         {
@@ -352,13 +379,13 @@ namespace WaterSortPuzzle.Game
             return views;
         }
 
-        // 튜브 GameObejct를 생성하고 TubeView를 초기화해 반환한다.
+        // 튜브 GameObject를 생성하고 TubeView를 초기화해 반환한다.
         private TubeView SpawnTubeView(int index, Tube tube, Color[] palette, float segSize, Vector3 pos)
         {
             var go = new GameObject($"Tube{index}");
             go.transform.position = pos;
             var view = go.AddComponent<TubeView>();
-            view.Init(index, tube, palette, _square, tubeSprite, _tubeMask, segSize, HandleTubeClicked);
+            view.Init(index, tube, palette, _square, tubeSprite, _tubeMask, segSize);
             return view;
         }
 

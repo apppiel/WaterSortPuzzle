@@ -1,4 +1,3 @@
-using System;
 using UnityEngine;
 
 namespace WaterSortPuzzle.Game
@@ -10,8 +9,5 @@ namespace WaterSortPuzzle.Game
     {
         // 이 튜브의 인덱스 (0번부터 시작)
         public int TubeIndex;
-
-        // 클릭 시 호출할 콜백 (GameManager.HandleTubeClicked)
-        public Action<int> OnClicked;
     }
 }

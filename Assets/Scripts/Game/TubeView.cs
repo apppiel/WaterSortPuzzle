@@ -1,4 +1,3 @@
-using System;
 using UnityEngine;
 using DG.Tweening;
 using WaterSortPuzzle.Core;
@@ -51,8 +50,7 @@ namespace WaterSortPuzzle.Game
         // tubeSprite: 병 PNG 스프라이트 (가장 위에 올라가 유리 테두리 효과)
         // tubeMask: 병 내부 마스크 스프라이트 (세그먼트를 병 모양으로 클리핑)
         // segmentSize: 세그먼트 한 칸의 월드 유닛 크기
-        // onClicked: 튜브 클릭 시 호출할 콜백
-        public void Init(int index, Tube tube, Color[] palette, Sprite square, Sprite tubeSprite, Sprite tubeMask, float segmentSize, Action<int> onClicked)
+        public void Init(int index, Tube tube, Color[] palette, Sprite square, Sprite tubeSprite, Sprite tubeMask, float segmentSize)
         {
             _tube = tube;
             _palette = palette;
@@ -73,7 +71,6 @@ namespace WaterSortPuzzle.Game
 
             var clickTarget = bgGo.AddComponent<TubeClickTarget>();
             clickTarget.TubeIndex = index;
-            clickTarget.OnClicked = onClicked;
 
             // ── 선택 하이라이트 (병 뒤에서 빛나는 효과) ────────
             var hlGo = new GameObject("SelectionHighlight");
@@ -137,11 +134,9 @@ namespace WaterSortPuzzle.Game
 
             // 튜브 스프라이트의 픽셀 크기로 비율 계산 → 슬롯 너비에 맞게 스케일
             float nativeW = tubeSprite.rect.width / tubeSprite.pixelsPerUnit;
-            float nativeH = tubeSprite.rect.height / tubeSprite.pixelsPerUnit;
             float tScale  = (s * 1.1f) / nativeW; // 가로를 슬롯 너비에 맞춤
 
             // 스프라이트 중심을 세그먼트 영역 중앙에 정렬
-            float tubeH = nativeH * tScale;
             tubeGo.transform.localPosition = new Vector3(0f, (tube.Capacity - 1) * s * 0.5f, 0f);
             tubeGo.transform.localScale     = new Vector3(tScale, tScale, 1f);
 

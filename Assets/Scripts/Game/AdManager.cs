@@ -128,7 +128,7 @@ namespace WaterSortPuzzle.Game
         {
             if (_rewardedAd != null && _rewardedAd.CanShowAd())
             {
-                bool _earned = false;
+                bool earned = false;
 
                 void OnClosed()
                 {
@@ -136,12 +136,12 @@ namespace WaterSortPuzzle.Game
                     // AdMob이 광고 중 일시정지한 게임을 반드시 재개한다
                     UnityEngine.Time.timeScale = 1f;
                     LoadRewarded();
-                    if (_earned) onRewarded?.Invoke();
+                    if (earned) onRewarded?.Invoke();
                 }
 
                 _rewardedAd.OnAdFullScreenContentClosed += OnClosed;
                 // 보상 획득 시점(광고 완료)에 플래그만 세운다 — 실제 실행은 광고 닫힌 후
-                _rewardedAd.Show(_ => _earned = true);
+                _rewardedAd.Show(_ => earned = true);
             }
             else
             {
