@@ -116,6 +116,7 @@ UnityEngine을 참조하지 않으므로, 컴파일러가 경계를 강제한다
 - 새 기능은 먼저 Core에 순수 로직으로 넣고, 그 다음 View를 붙인다.
 - 과하게 일반화하지 말 것. Water sort에 필요한 만큼만 만든다.
 - LevelData Palette의 Color는 반드시 Alpha=1(255)로 설정해야 한다. 기본값이 Alpha=0이라 투명하게 렌더링됨.
+- 레벨을 추가하면 `GameManager._levels`(인스펙터 배열)와 `LevelSelectManager._totalLevels`를 함께 갱신할 것. 두 숫자가 어긋나면 팬텀 버튼(존재하지 않는 레벨)이 눌릴 수 있음. GameManager.Start()에 방어 코드가 있어 크래시는 막지만 유저가 레벨선택으로 튕겨나가는 어색한 UX가 발생한다.
 
 ## 구현 현황 및 TODO
 
