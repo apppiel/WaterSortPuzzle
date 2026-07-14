@@ -3,6 +3,7 @@
   <Project Path="Assembly-CSharp-firstpass.csproj" />
   <Project Path="Assembly-CSharp.csproj" />
   <Project Path="WaterSortPuzzle.UI.csproj" />
+  <Project Path="GoogleMobileAds.Editor.csproj" />
   <Project Path="WaterSortPuzzle.Game.csproj" />
   <Project Path="WaterSortPuzzle.Tests.csproj" />
   <Project Path="WaterSortPuzzle.Editor.csproj" />
