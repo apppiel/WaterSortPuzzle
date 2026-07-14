@@ -135,42 +135,64 @@ public class LevelGeneratorWindow : EditorWindow
     for (int e = 0; e < config.emptyTubeCount; e++)
       tubes.Add(new List<int>());
 
-    // ── 2. 랜덤하게 섞기 (유효한 붓기를 역방향으로 수행) ──
-    // levelIndex를 시드로 사용해 레벨마다 다른 패턴이 나오도록 한다
+    // ── 2. 랜덤하게 섞기 ──────────────────────────────────
+    // 셔플 중에는 빈 튜브를 1개 더 추가해 이동 경우의 수를 늘린다
+    // (최종 레벨에서는 다시 1개로 줄임)
+    tubes.Add(new List<int>());
+    int shuffleTotal = tubes.Count;
+
     System.Random rng = new System.Random(levelIndex * 1000 + config.colorCount);
     int steps = config.shuffleSteps;
 
     for (int step = 0; step < steps; step++)
     {
-      // 유효한 붓기 목록을 수집한다
-      List<(int from, int to)> validPours = new List<(int, int)>();
+      var validPours = new List<(int from, int to)>();
 
-      for (int from = 0; from < total; from++)
+      for (int from = 0; from < shuffleTotal; from++)
       {
-        if (tubes[from].Count == 0) continue; // 빈 튜브는 출발 불가
+        if (tubes[from].Count == 0) continue;
+
         int topColor = tubes[from][tubes[from].Count - 1];
 
-        for (int to = 0; to < total; to++)
+        // 단색으로 가득 찬 튜브는 출발 제외 (완성된 걸 흩트리지 않음)
+        bool allSame = true;
+        foreach (int s in tubes[from])
+          if (s != topColor) { allSame = false; break; }
+        if (allSame && tubes[from].Count == cap) continue;
+
+        for (int to = 0; to < shuffleTotal; to++)
         {
           if (from == to) continue;
-          if (tubes[to].Count >= cap) continue; // 가득 찬 튜브는 불가
-
-          // 비어있거나 맨 위 색이 같으면 붓기 가능
+          if (tubes[to].Count >= cap) continue;
           if (tubes[to].Count == 0 || tubes[to][tubes[to].Count - 1] == topColor)
             validPours.Add((from, to));
         }
       }
 
-      if (validPours.Count == 0) break; // 더 이상 섞을 수 없으면 종료
+      if (validPours.Count == 0) break;
 
-      // 유효한 붓기 중 랜덤하게 하나 실행
       var (f, t) = validPours[rng.Next(validPours.Count)];
-      int color = tubes[f][tubes[f].Count - 1];
+      int pourColor = tubes[f][tubes[f].Count - 1];
 
-      // 세그먼트 1개씩 이동 (한 번에 전부 옮기면 색이 섞이지 않음)
-      tubes[f].RemoveAt(tubes[f].Count - 1);
-      tubes[t].Add(color);
+      // 상단 연속 블록을 계산해 한 번에 이동 (실제 게임 규칙과 동일)
+      int runLen = 0;
+      for (int k = tubes[f].Count - 1; k >= 0; k--)
+      {
+        if (tubes[f][k] == pourColor) runLen++;
+        else break;
+      }
+      int space = cap - tubes[t].Count;
+      int moveCount = System.Math.Min(runLen, space);
+
+      for (int m = 0; m < moveCount; m++)
+      {
+        tubes[f].RemoveAt(tubes[f].Count - 1);
+        tubes[t].Add(pourColor);
+      }
     }
+
+    // 셔플용으로 추가했던 빈 튜브 제거
+    tubes.RemoveAt(tubes.Count - 1);
 
     // ── 3. LevelData 에셋 생성 ────────────────────────────
     LevelData data = ScriptableObject.CreateInstance<LevelData>();

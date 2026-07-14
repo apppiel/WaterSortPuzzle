@@ -779,6 +779,26 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 66f04ff8cdd3b49f6909205e0feb4d58, type: 2}
   - {fileID: 11400000, guid: c78ce8bef18d5435b92469092df254be, type: 2}
   - {fileID: 11400000, guid: 4048faccc023b4e1292e6166ea21fd76, type: 2}
+  - {fileID: 11400000, guid: 4bbb753aab18d46028fc0c0dfcd8ef9c, type: 2}
+  - {fileID: 11400000, guid: b82ba4fca4c7a40ec971baaa66a66e3b, type: 2}
+  - {fileID: 11400000, guid: 01d4f165a06d94432bfd7d570048dad9, type: 2}
+  - {fileID: 11400000, guid: 8601f3104f7d54f4099d5c94c7768fe0, type: 2}
+  - {fileID: 11400000, guid: eacfc1e14e27d4720a8f6c4fb9e048dc, type: 2}
+  - {fileID: 11400000, guid: c4450a732e37d4211b95193829b0fedd, type: 2}
+  - {fileID: 11400000, guid: 40a62c588bca642968b61be01b2cde6a, type: 2}
+  - {fileID: 11400000, guid: 7db897cf077f444d78163efb78a8fb7c, type: 2}
+  - {fileID: 11400000, guid: 436240f06bc3c47afbe016951c259698, type: 2}
+  - {fileID: 11400000, guid: 8c8cc9435816a4fcc8227c2d9619dcd0, type: 2}
+  - {fileID: 11400000, guid: 1512eb8bc775d431288d3f55f66c1da1, type: 2}
+  - {fileID: 11400000, guid: ef8d022459c834f32940351a10fd5933, type: 2}
+  - {fileID: 11400000, guid: ac4cedb36f5ac4570a5b644755a4769b, type: 2}
+  - {fileID: 11400000, guid: 5a01edad03ad74452af40de173aca54a, type: 2}
+  - {fileID: 11400000, guid: 87fa18d7456b14f2a8d7da948da136ff, type: 2}
+  - {fileID: 11400000, guid: 458e4962b7f904f43b3132de94cb430e, type: 2}
+  - {fileID: 11400000, guid: 8b2f944312a6a49b4b9dc2384ec3c153, type: 2}
+  - {fileID: 11400000, guid: 285212d96c1414e70902ea2464758b4b, type: 2}
+  - {fileID: 11400000, guid: 60eb9c6125a99478fbf4e0a2e28a63ae, type: 2}
+  - {fileID: 11400000, guid: e108247bfd26b4251ae35ec6aa045b50, type: 2}
   tubeSprite: {fileID: 21300000, guid: c1cfe6432c4be43acb2f285844396a4b, type: 3}
   _tubeMask: {fileID: 21300000, guid: a5d073d6d4aaf4fd1a3ccbd8c7a4e5c9, type: 3}
   koreanFont: {fileID: 11400000, guid: 215a29a15dc9d41549087d1c9affc4d7, type: 2}
