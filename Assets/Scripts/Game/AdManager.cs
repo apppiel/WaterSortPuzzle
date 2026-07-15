@@ -29,8 +29,10 @@ namespace WaterSortPuzzle.Game
 #endif
 
         // Development Build이면 테스트 ID, 릴리즈면 실제 ID 사용
-        private string InterstitialAdUnitId => Debug.isDebugBuild ? TestInterstitialId : RealInterstitialId;
-        private string RewardedAdUnitId     => Debug.isDebugBuild ? TestRewardedId     : RealRewardedId;
+        // MobileAds.Initialize 콜백은 non-main thread에서 실행돼 Debug.isDebugBuild를 직접 부를 수 없다.
+        // Awake(메인 스레드)에서 캐싱해두고 이후에는 필드만 참조한다.
+        private string _interstitialAdUnitId;
+        private string _rewardedAdUnitId;
 
         private InterstitialAd _interstitialAd;
         private RewardedAd     _rewardedAd;
@@ -46,6 +48,10 @@ namespace WaterSortPuzzle.Game
             Instance = this;
             DontDestroyOnLoad(gameObject);
 
+            // 메인 스레드에서 광고 단위 ID를 결정해 캐싱
+            _interstitialAdUnitId = Debug.isDebugBuild ? TestInterstitialId : RealInterstitialId;
+            _rewardedAdUnitId     = Debug.isDebugBuild ? TestRewardedId     : RealRewardedId;
+
             MobileAds.Initialize(_ =>
             {
                 LoadInterstitial();
@@ -59,7 +65,7 @@ namespace WaterSortPuzzle.Game
             _interstitialAd?.Destroy();
             _interstitialAd = null;
 
-            InterstitialAd.Load(InterstitialAdUnitId, new AdRequest(),
+            InterstitialAd.Load(_interstitialAdUnitId, new AdRequest(),
                 (InterstitialAd ad, LoadAdError error) =>
                 {
                     if (error != null)
@@ -77,7 +83,7 @@ namespace WaterSortPuzzle.Game
             _rewardedAd?.Destroy();
             _rewardedAd = null;
 
-            RewardedAd.Load(RewardedAdUnitId, new AdRequest(),
+            RewardedAd.Load(_rewardedAdUnitId, new AdRequest(),
                 (RewardedAd ad, LoadAdError error) =>
                 {
                     if (error != null)
