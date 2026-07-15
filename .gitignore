@@ -9,6 +9,12 @@ Assets/Screenshots.meta
 # 레벨 생성기가 저장하는 풀이 텍스트 (로컬 참고용)
 /LevelSolutions/
 
+# Firebase Editor native libraries (Editor 전용, 111MB 짜리도 있어 GitHub 100MB 제한 초과).
+# Android 빌드는 m2repository의 .aar를, iOS 빌드는 Plugins/iOS의 .dll을 쓰므로 이 폴더는 불필요.
+# 새 개발자가 클론 시 Editor에서 Firebase 테스트가 필요하면 Firebase Unity SDK를 재임포트하면 복구됨.
+Assets/Firebase/Plugins/x86_64/
+Assets/Firebase/Plugins/x86_64.meta
+
 # Unity .gitignore Template
 # Source: https://github.com/github/gitignore/blob/main/Unity.gitignore
 # Last synced: 2025-12-18

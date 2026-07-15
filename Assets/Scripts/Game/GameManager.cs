@@ -82,6 +82,10 @@ namespace WaterSortPuzzle.Game
         // 메뉴 팝업 UI
         private MenuPopup _menuPopup;
 
+        // 마지막 레벨(100) 클리어 시 인증코드를 발급하는 매니저.
+        // 마지막 레벨에서만 생성한다 (Firebase 초기화 비용을 다른 레벨에서 부담하지 않도록).
+        private RewardManager _rewardManager;
+
         // 튜브 4개 이하: 한 줄. 5개 이상: 두 줄로 전환하는 기준 (상용 게임 표준)
         private const int TwoRowThreshold = 5;
 
@@ -123,6 +127,11 @@ namespace WaterSortPuzzle.Game
             _tubeViews = BuildViews(tubes); // 화면 오브젝트 생성
             BuildClearPopup();              // 클리어 팝업 생성 (평소엔 숨김)
             BuildMenuPopup();               // 메뉴 팝업 생성 (평소엔 숨김)
+
+            // 마지막 레벨에서만 리워드 매니저 생성.
+            // 유저가 이 레벨을 플레이하는 몇 분 동안 Firebase 초기화가 완료된다.
+            if (_currentLevelIndex == _levels.Length - 1)
+                BuildRewardManager();
 
             // 이동 전까지 리셋 버튼 비활성화
             if (_resetButton != null)
@@ -281,6 +290,10 @@ namespace WaterSortPuzzle.Game
         // 튜브들이 파도처럼 통통 튄 뒤 클리어 팝업이 등장한다.
         private void PlayClearSequence()
         {
+            // 마지막 레벨이면 리워드 코드 발급 시작.
+            // 클리어 연출과 병렬로 진행되므로 유저가 팝업 볼 때쯤 응답이 도착한다.
+            _rewardManager?.IssueCode();
+
             // 튜브마다 0.08초 시차로 바운스 → 왼쪽에서 오른쪽으로 파도치는 느낌
             for (int i = 0; i < _tubeViews.Length; i++)
                 _tubeViews[i].PlayClearBounce(i * 0.08f);
@@ -302,6 +315,22 @@ namespace WaterSortPuzzle.Game
                 onContinue:    () => _isPaused = false,
                 font: koreanFont
             );
+        }
+
+        // 리워드 매니저 오브젝트를 생성하고 초기화한다.
+        // 마지막 레벨에서만 호출된다. 생성 시점에 Firebase 초기화가 시작되므로
+        // 유저가 레벨을 푸는 동안 준비가 완료된다.
+        // TODO: 다음 세션에서 uGUI 팝업이 만들어지면 OnCodeIssued 구독이 여기서 팝업으로 옮겨간다.
+        private void BuildRewardManager()
+        {
+            var go = new GameObject("RewardManager");
+            _rewardManager = go.AddComponent<RewardManager>();
+
+            // 로직 검증용 임시 리스너 — Console에서 발급 결과 확인용
+            _rewardManager.OnCodeIssued += (code, status, isReissue) =>
+            {
+                Debug.Log($"[GameManager] 코드 발급 이벤트: code=\"{code}\", status=\"{status}\", isReissue={isReissue}");
+            };
         }
 
         // 클리어 팝업 오브젝트를 생성하고 초기화한다.

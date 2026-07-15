@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "776593584361",
+    "project_id": "nana-no2",
+    "storage_bucket": "nana-no2.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:776593584361:android:892a6a68354615da110078",
+        "android_client_info": {
+          "package_name": "com.nanabox.watersortpuzzle"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB5tWSMYwhjfLcKh8Y2M63HyIRIyYmVmKs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
