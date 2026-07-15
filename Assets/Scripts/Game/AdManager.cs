@@ -37,6 +37,12 @@ namespace WaterSortPuzzle.Game
         private InterstitialAd _interstitialAd;
         private RewardedAd     _rewardedAd;
 
+        // 전면 광고 게이팅: N번 요청마다 한 번만 실제 표시.
+        // 매 레벨 클리어마다 광고 뜨면 짜증나므로 3라운드마다 한 번씩만 노출.
+        // 앱 실행 세션 내에서 유지되며(DontDestroyOnLoad), 앱 재시작 시 0으로 리셋 → 초반 몇 판은 광고 없이 편하게.
+        private int _interstitialGateCount = 0;
+        private const int InterstitialInterval = 3;
+
         // 싱글턴 설정 및 AdMob 초기화
         private void Awake()
         {
@@ -93,6 +99,21 @@ namespace WaterSortPuzzle.Game
                     }
                     _rewardedAd = ad;
                 });
+        }
+
+        // 전면 광고를 게이팅해서 표시한다 (매 N번 요청마다 한 번만 실제 표시).
+        // GameManager 의 "다음 레벨" 흐름처럼 매번 호출되는 지점에서 이걸 사용.
+        // 게이팅에 걸린 경우 광고 없이 onClosed 만 즉시 호출.
+        public void ShowInterstitialGated(Action onClosed)
+        {
+            _interstitialGateCount++;
+            if (_interstitialGateCount < InterstitialInterval)
+            {
+                onClosed?.Invoke();
+                return;
+            }
+            _interstitialGateCount = 0;
+            ShowInterstitial(onClosed);
         }
 
         // 전면 광고를 표시한다.

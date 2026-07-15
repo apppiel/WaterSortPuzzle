@@ -381,10 +381,11 @@ namespace WaterSortPuzzle.Game
                         ? (Action)(() => SceneLoader.LoadGame(nextIndex))
                         : SceneLoader.LoadLevelSelect;
 
-                    // 전면 광고 시청 후 다음 씬으로 이동 (광고 없으면 바로 이동)
+                    // 전면 광고 게이팅: 매 3라운드마다 한 번만 실제 노출.
+                    // 광고 없거나 게이팅 스킵이면 즉시 다음 씬으로 이동.
                     var ad = AdManager.Instance;
                     if (ad != null)
-                        ad.ShowInterstitial(navigate);
+                        ad.ShowInterstitialGated(navigate);
                     else
                         navigate();
                 },
