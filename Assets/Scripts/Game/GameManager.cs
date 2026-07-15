@@ -237,18 +237,20 @@ namespace WaterSortPuzzle.Game
 
         // HUD의 리셋 버튼에서 호출한다.
         // 보상형 광고를 시청하면 현재 레벨을 처음부터 다시 시작한다.
+        // 광고 로드 실패/미준비/AdManager 없음 케이스에서도 리셋은 반드시 실행한다:
+        // "버튼 눌러도 반응 없음" UX 가 광고 수익 손해보다 훨씬 큰 리스크 (리뷰 이탈)이라
+        // A 방식(광고 없어도 리셋 허용)을 채택. 대부분 케이스는 광고가 정상 로드됨.
         public void HandleReset()
         {
             if (_isAnimating || _gameOver || _isPaused) return;
 
+            void DoReset() => SceneLoader.LoadGame(_currentLevelIndex);
+
             var ad = AdManager.Instance;
             if (ad != null)
-            {
-                ad.ShowRewarded(
-                    onRewarded: () => SceneLoader.LoadGame(_currentLevelIndex),
-                    onFailed:   () => Debug.Log("보상형 광고 미준비 — 리셋 불가")
-                );
-            }
+                ad.ShowRewarded(onRewarded: DoReset, onFailed: DoReset);
+            else
+                DoReset();
         }
 
         // HUD의 Undo 버튼에서 호출한다. 최대 3회까지 되돌릴 수 있다.
@@ -416,9 +418,11 @@ namespace WaterSortPuzzle.Game
             int   count   = tubes.Length;
             bool  twoRows = count >= TwoRowThreshold;
 
-            // 두 줄일 때 튜브를 더 작게 그려 화면에 여유 있게 들어오도록 조정
-            float segSize = twoRows ? 0.58f : 0.7f;
-            float spacing = twoRows ? 0.92f : 1.1f;
+            // 두 줄일 때 튜브를 더 작게 그려 화면에 여유 있게 들어오도록 조정.
+            // 단일 행(4개 이하)도 5+와 비슷한 크기감이 나게 중간값 0.62 로 조정
+            // (예전 0.7 은 실기에서 너무 크게 보였음. 5+ 는 0.58 유지).
+            float segSize = twoRows ? 0.58f : 0.62f;
+            float spacing = twoRows ? 0.92f : 0.98f;
 
             // 튜브가 12개 이상이면 큰 행이 카메라 가로를 넘어감 → 자동 축소.
             // 큰 행 폭 = (rowCount-1) * spacing + segSize * 1.1 (튜브 자체 폭 근사)
