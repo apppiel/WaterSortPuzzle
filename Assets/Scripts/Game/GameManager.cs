@@ -4,6 +4,7 @@ using UnityEngine.InputSystem;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using DG.Tweening;
+using Firebase.Analytics;
 using TMPro;
 using WaterSortPuzzle.Core;
 using WaterSortPuzzle.Data;
@@ -89,6 +90,10 @@ namespace WaterSortPuzzle.Game
         // 리워드 코드 표시 팝업. 마지막 레벨에서 ClearPopup 대신 이걸 띄운다.
         private RewardPopup _rewardPopup;
 
+        // 레벨 클리어 시간을 재기 위한 시작 시각 (Analytics duration 파라미터용).
+        // Time.time 은 앱 백그라운드 시 정지하므로 실제 플레이 시간에 가깝게 측정됨.
+        private float _levelStartTime;
+
         // 튜브 4개 이하: 한 줄. 5개 이상: 두 줄로 전환하는 기준 (상용 게임 표준)
         private const int TwoRowThreshold = 5;
 
@@ -142,6 +147,11 @@ namespace WaterSortPuzzle.Game
 
             // Undo 횟수 초기화
             _remainingUndos = MaxUndoCount;
+
+            // Analytics: 레벨 시작 이벤트. level 파라미터는 1-based (게임 UI 표기와 일치).
+            _levelStartTime = Time.time;
+            FirebaseAnalytics.LogEvent("level_start",
+                new Parameter("level", _currentLevelIndex + 1));
         }
 
         // 매 프레임 호출된다. 터치 및 마우스 클릭 입력을 처리한다.
@@ -293,6 +303,13 @@ namespace WaterSortPuzzle.Game
         // 튜브들이 파도처럼 통통 튄 뒤 클리어(또는 리워드) 팝업이 등장한다.
         private void PlayClearSequence()
         {
+            // Analytics: 레벨 클리어 이벤트. 시작~클리어 소요 시간(초)까지 기록.
+            // 어느 레벨이 너무 어려운지/쉬운지 판단 근거로 사용.
+            long durationSec = (long)(Time.time - _levelStartTime);
+            FirebaseAnalytics.LogEvent("level_clear",
+                new Parameter("level", _currentLevelIndex + 1),
+                new Parameter("duration_sec", durationSec));
+
             // 마지막 레벨이면 리워드 코드 발급 시작.
             // 클리어 연출과 병렬로 진행되므로 유저가 팝업 볼 때쯤 응답이 도착한다.
             _rewardManager?.IssueCode();
