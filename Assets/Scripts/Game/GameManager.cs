@@ -86,6 +86,9 @@ namespace WaterSortPuzzle.Game
         // 마지막 레벨에서만 생성한다 (Firebase 초기화 비용을 다른 레벨에서 부담하지 않도록).
         private RewardManager _rewardManager;
 
+        // 리워드 코드 표시 팝업. 마지막 레벨에서 ClearPopup 대신 이걸 띄운다.
+        private RewardPopup _rewardPopup;
+
         // 튜브 4개 이하: 한 줄. 5개 이상: 두 줄로 전환하는 기준 (상용 게임 표준)
         private const int TwoRowThreshold = 5;
 
@@ -287,7 +290,7 @@ namespace WaterSortPuzzle.Game
         }
 
         // 클리어 연출을 재생한다.
-        // 튜브들이 파도처럼 통통 튄 뒤 클리어 팝업이 등장한다.
+        // 튜브들이 파도처럼 통통 튄 뒤 클리어(또는 리워드) 팝업이 등장한다.
         private void PlayClearSequence()
         {
             // 마지막 레벨이면 리워드 코드 발급 시작.
@@ -298,9 +301,13 @@ namespace WaterSortPuzzle.Game
             for (int i = 0; i < _tubeViews.Length; i++)
                 _tubeViews[i].PlayClearBounce(i * 0.08f);
 
-            // 튜브 애니메이션이 끝날 때쯤 팝업 등장
+            // 튜브 애니메이션이 끝날 때쯤 팝업 등장.
+            // 마지막 레벨이면 RewardPopup, 아니면 기존 ClearPopup.
             float popupDelay = _tubeViews.Length * 0.08f + 0.4f;
-            DOVirtual.DelayedCall(popupDelay, () => _clearPopup.Show());
+            if (_rewardPopup != null)
+                DOVirtual.DelayedCall(popupDelay, () => _rewardPopup.Show());
+            else
+                DOVirtual.DelayedCall(popupDelay, () => _clearPopup.Show());
         }
 
         // 메뉴 팝업 오브젝트를 생성하고 초기화한다.
@@ -317,20 +324,26 @@ namespace WaterSortPuzzle.Game
             );
         }
 
-        // 리워드 매니저 오브젝트를 생성하고 초기화한다.
-        // 마지막 레벨에서만 호출된다. 생성 시점에 Firebase 초기화가 시작되므로
+        // 리워드 매니저 + 리워드 팝업을 함께 생성하고 이벤트를 연결한다.
+        // 마지막 레벨에서만 호출된다. RewardManager Awake에서 Firebase 초기화가 시작되므로
         // 유저가 레벨을 푸는 동안 준비가 완료된다.
-        // TODO: 다음 세션에서 uGUI 팝업이 만들어지면 OnCodeIssued 구독이 여기서 팝업으로 옮겨간다.
         private void BuildRewardManager()
         {
-            var go = new GameObject("RewardManager");
-            _rewardManager = go.AddComponent<RewardManager>();
+            // 매니저 (로직)
+            var mgrGo = new GameObject("RewardManager");
+            _rewardManager = mgrGo.AddComponent<RewardManager>();
 
-            // 로직 검증용 임시 리스너 — Console에서 발급 결과 확인용
-            _rewardManager.OnCodeIssued += (code, status, isReissue) =>
-            {
-                Debug.Log($"[GameManager] 코드 발급 이벤트: code=\"{code}\", status=\"{status}\", isReissue={isReissue}");
-            };
+            // 팝업 (UI). ClearPopup 대신 이걸 띄우게 된다.
+            var popupGo = new GameObject("RewardPopup");
+            _rewardPopup = popupGo.AddComponent<RewardPopup>();
+            _rewardPopup.Init(
+                // 닫기: 마지막 레벨이니 레벨선택으로 복귀
+                onClose: () => SceneLoader.LoadLevelSelect(),
+                font: koreanFont
+            );
+
+            // 이벤트 연결: 코드 발급 결과가 나오면 팝업에 반영
+            _rewardManager.OnCodeIssued += _rewardPopup.SetResult;
         }
 
         // 클리어 팝업 오브젝트를 생성하고 초기화한다.
