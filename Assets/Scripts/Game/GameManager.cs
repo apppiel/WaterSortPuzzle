@@ -90,6 +90,20 @@ namespace WaterSortPuzzle.Game
         // 리워드 코드 표시 팝업. 마지막 레벨에서 ClearPopup 대신 이걸 띄운다.
         private RewardPopup _rewardPopup;
 
+        // 튜토리얼용 손 아이콘 스프라이트 (인스펙터에서 Cursor_Hand3 등을 드래그)
+        [SerializeField] private Sprite _tutorialHandSprite;
+
+        // Level 1 첫 이동을 유도하는 튜토리얼 매니저. 완료 시 자기 자신을 파괴한다.
+        private TutorialManager _tutorial;
+
+#if UNITY_EDITOR
+        // 데모/개발용: 체크 후 Play 하면 tutorial_done 플래그를 지워 튜토리얼을 다시 볼 수 있다.
+        // #if UNITY_EDITOR 로 감싸 릴리즈 빌드에는 필드·로직 모두 포함되지 않는다.
+        [SerializeField]
+        [Tooltip("체크 후 Play → 튜토리얼 완료 저장을 지우고 다시 표시. 릴리즈 빌드엔 포함 안 됨.")]
+        private bool _resetTutorialOnPlay;
+#endif
+
         // 레벨 클리어 시간을 재기 위한 시작 시각 (Analytics duration 파라미터용).
         // Time.time 은 앱 백그라운드 시 정지하므로 실제 플레이 시간에 가깝게 측정됨.
         private float _levelStartTime;
@@ -140,6 +154,25 @@ namespace WaterSortPuzzle.Game
             // 유저가 이 레벨을 플레이하는 몇 분 동안 Firebase 초기화가 완료된다.
             if (_currentLevelIndex == _levels.Length - 1)
                 BuildRewardManager();
+
+            // Level 1(index 0)이고 튜토리얼을 아직 안 봤다면 손 아이콘 안내 표시.
+            // Level 1 은 "튜브 1 → 튜브 3 한 번 붓기"로 클리어되도록 디자인됨.
+#if UNITY_EDITOR
+            if (_resetTutorialOnPlay)
+            {
+                PlayerPrefs.DeleteKey("tutorial_done");
+                PlayerPrefs.Save();
+            }
+#endif
+            if (_currentLevelIndex == 0 && !TutorialManager.IsDone && _tutorialHandSprite != null)
+            {
+                var tutGo = new GameObject("TutorialManager");
+                _tutorial = tutGo.AddComponent<TutorialManager>();
+                _tutorial.StartTutorial(_tutorialHandSprite,
+                                        fromIdx: 1,
+                                        fromTube: _tubeViews[1].transform,
+                                        toTube:   _tubeViews[3].transform);
+            }
 
             // 이동 전까지 리셋 버튼 비활성화
             if (_resetButton != null)
@@ -193,6 +226,10 @@ namespace WaterSortPuzzle.Game
                 _selectedIndex = index;
                 _tubeViews[index].SetSelected(true);
                 _audioManager?.PlaySelect();
+
+                // 튜토리얼: 손을 TO 튜브로 이동시켜 "두 번째 탭" 을 유도.
+                // 힌트한 FROM 튜브를 정확히 눌렀을 때만 이동 (엉뚱한 튜브 눌러도 손이 움직이던 버그 fix)
+                _tutorial?.NotifyTubeSelected(index);
             }
             else if (_selectedIndex == index)
             {
@@ -214,6 +251,10 @@ namespace WaterSortPuzzle.Game
                     // 첫 이동 성공 시 리셋 버튼 활성화
                     if (_resetButton != null)
                         _resetButton.interactable = true;
+
+                    // 튜토리얼: 손을 페이드아웃하고 완료 플래그 저장
+                    _tutorial?.NotifyPourSucceeded();
+
                     PlayPourAnimation(from, index);
                 }
                 else

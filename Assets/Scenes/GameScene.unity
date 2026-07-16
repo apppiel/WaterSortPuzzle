@@ -879,6 +879,8 @@ MonoBehaviour:
   _resetButton: {fileID: 2136803241}
   _undoButton: {fileID: 211183370}
   _menuButton: {fileID: 92817880}
+  _tutorialHandSprite: {fileID: 21300000, guid: c0762f5c32ae738428f60d537be08554, type: 3}
+  _resetTutorialOnPlay: 1
 --- !u!4 &783727301
 Transform:
   m_ObjectHideFlags: 0
