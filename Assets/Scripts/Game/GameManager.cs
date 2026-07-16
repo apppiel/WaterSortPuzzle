@@ -277,10 +277,11 @@ namespace WaterSortPuzzle.Game
         }
 
         // HUD의 리셋 버튼에서 호출한다.
-        // 보상형 광고를 시청하면 현재 레벨을 처음부터 다시 시작한다.
+        // 리셋을 즉시 실행하고 그 위에 보상형 광고를 표시한다 (순서에 유의: 리셋 → 광고).
         // 광고 로드 실패/미준비/AdManager 없음 케이스에서도 리셋은 반드시 실행한다:
         // "버튼 눌러도 반응 없음" UX 가 광고 수익 손해보다 훨씬 큰 리스크 (리뷰 이탈)이라
         // A 방식(광고 없어도 리셋 허용)을 채택. 대부분 케이스는 광고가 정상 로드됨.
+        // 순서를 뒤집은 이유는 AdManager.ShowRewarded 코멘트 참조 (AdMob close 이벤트 불안정).
         public void HandleReset()
         {
             if (_isAnimating || _gameOver || _isPaused) return;
@@ -289,7 +290,7 @@ namespace WaterSortPuzzle.Game
 
             var ad = AdManager.Instance;
             if (ad != null)
-                ad.ShowRewarded(onRewarded: DoReset, onFailed: DoReset);
+                ad.ShowRewarded(DoReset);
             else
                 DoReset();
         }

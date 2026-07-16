@@ -43,15 +43,6 @@ namespace WaterSortPuzzle.Game
         private int _interstitialGateCount = 0;
         private const int InterstitialInterval = 3;
 
-        // 보상형 광고 종료 시 실행할 콜백 (리셋 등).
-        // OnAdFullScreenContentClosed 가 일부 실기(갤럭시 등)에서 발화 안 되는 경우가 있어
-        // OnApplicationFocus 백업 경로에서도 이 콜백을 발화한다. 둘 중 먼저 오는 쪽에서
-        // 한 번만 실행되도록 발화 후 null 로 비운다 (idempotent).
-        private Action _pendingRewardedCallback;
-        // 보상형 광고가 실제로 화면에 올라와 앱 포커스를 뺏은 상태인지.
-        // focus loss 를 관찰한 후에만 focus return 을 "광고 닫힘" 신호로 신뢰한다 (스퓨리어스 방지).
-        private bool _rewardedAdOpened;
-
         // 싱글턴 설정 및 AdMob 초기화
         private void Awake()
         {
@@ -158,74 +149,39 @@ namespace WaterSortPuzzle.Game
         }
 
         // 보상형 광고를 표시한다.
-        // onRewarded: 광고가 닫히면 호출 (리셋 실행)
-        // onFailed: 광고가 없거나 로드 중일 때 호출
+        // onRewarded: 리셋 등 유저 액션. **광고보다 먼저** 즉시 실행됨.
         //
-        // 콜백 발화 경로 (둘 중 먼저 오는 쪽이 승자, idempotent):
-        //   1) AdMob OnAdFullScreenContentClosed — 정석 경로
-        //   2) OnApplicationFocus 백업 — 일부 실기(갤럭시 확인)에서 (1)이 아예 안 오는 케이스 우회
-        //      광고가 뜨면 앱이 포커스 잃음(false) → 광고 닫히면 포커스 복귀(true) OS 이벤트를 활용.
-        //      이건 반드시 옴.
-        //
-        // 정책: 광고가 닫히면 유저가 스킵했든 끝까지 봤든 무조건 onRewarded 호출.
-        //   HandleReset 의 "광고 실패 → 리셋 실행" 원칙과 통일 —
-        //   유저의 클릭 의도가 광고 시청 여부보다 우선한다.
-        public void ShowRewarded(Action onRewarded, Action onFailed = null)
+        // 순서를 "리셋 → 광고" 로 뒤집은 이유:
+        //   실기(갤럭시)에서 AdMob OnAdFullScreenContentClosed 가 발화 안 되는 케이스가
+        //   있어 광고 close 이벤트에 리셋을 걸면 두 번째 클릭에서만 리셋되는 버그 발생.
+        //   OnApplicationFocus 백업 경로도 잡히지 않는 실기가 있음.
+        //   → 이벤트 의존 자체를 없애고, 유저 액션은 즉시 완료. 광고는 그 다음에 표시.
+        //   UX 관점에선 "광고 봤더니 새 판이더라" 로 자연스러움.
+        //   광고 수익도 유지됨 (Show 는 여전히 호출).
+        public void ShowRewarded(Action onRewarded)
         {
+            // 1. 유저 액션 즉시 실행 (씬 리로드는 이번 프레임 끝에 실제 반영)
+            onRewarded?.Invoke();
+
+            // 2. 그 위에 광고 표시. AdMob 이벤트에 의존하지 않으니 콜백 트래킹 불필요.
+            //    광고 닫히면 다음 광고 로드만 하면 됨.
             if (_rewardedAd != null && _rewardedAd.CanShowAd())
             {
-                // pending 콜백 세팅. FirePendingRewardedCallback 가 호출되면 이걸 실행하고 null 로 비운다.
-                _pendingRewardedCallback = () =>
-                {
-                    // AdMob이 광고 중 일시정지한 게임을 반드시 재개한다
-                    UnityEngine.Time.timeScale = 1f;
-                    LoadRewarded();
-                    onRewarded?.Invoke();
-                };
-                _rewardedAdOpened = false;
-
+                var localAd = _rewardedAd;
                 void OnClosed()
                 {
-                    _rewardedAd.OnAdFullScreenContentClosed -= OnClosed;
-                    FirePendingRewardedCallback();
+                    localAd.OnAdFullScreenContentClosed -= OnClosed;
+                    UnityEngine.Time.timeScale = 1f;
+                    LoadRewarded();
                 }
-                _rewardedAd.OnAdFullScreenContentClosed += OnClosed;
+                localAd.OnAdFullScreenContentClosed += OnClosed;
                 // AdMob API 요구사항: Show 는 반드시 Action<Reward> 콜백 인자를 받는다 (미사용)
-                _rewardedAd.Show(_ => { });
+                localAd.Show(_ => { });
             }
             else
             {
-                Debug.LogWarning("보상형 광고가 준비되지 않았습니다.");
-                onFailed?.Invoke();
+                // 광고 준비 안 됐어도 리셋은 이미 위에서 실행됨. 여기선 다음 광고 로드만.
                 LoadRewarded();
-            }
-        }
-
-        // pending 콜백을 딱 한 번만 실행한다. AdMob close 이벤트 or focus 복귀 중 먼저 오는 쪽에서 호출.
-        private void FirePendingRewardedCallback()
-        {
-            if (_pendingRewardedCallback == null) return;
-            var cb = _pendingRewardedCallback;
-            _pendingRewardedCallback = null;
-            _rewardedAdOpened = false;
-            cb();
-        }
-
-        // OS 레벨 포커스 이벤트 — AdMob close 이벤트가 안 오는 실기 대응 백업 경로.
-        // 광고 표시 → 앱 포커스 상실 → 광고 닫힘 → 앱 포커스 복귀 흐름을 활용해
-        // pending 콜백을 발화한다. focus loss 를 실제로 관찰한 뒤(_rewardedAdOpened == true)의
-        // focus return 만 신뢰해서 알림 팝업 등 스퓨리어스 focus 이벤트로 오발화하지 않도록.
-        private void OnApplicationFocus(bool hasFocus)
-        {
-            if (_pendingRewardedCallback == null) return;
-
-            if (!hasFocus)
-            {
-                _rewardedAdOpened = true;
-            }
-            else if (_rewardedAdOpened)
-            {
-                FirePendingRewardedCallback();
             }
         }
     }
