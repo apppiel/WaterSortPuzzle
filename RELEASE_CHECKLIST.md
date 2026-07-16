@@ -196,7 +196,7 @@ Android(Play Store) 우선. iOS는 별도 섹션.
 ### Firebase iOS 세팅
 - [ ] Firebase Console에서 nana-no2 프로젝트에 iOS 앱 추가
 - [ ] `GoogleService-Info.plist` 다운로드 → `Assets/` 루트에 배치
-- [ ] `app-ads.txt` 를 `nanabox.co.kr` 루트에 업로드 → NO.1·NO.2 iOS 광고 모두 커버 (도메인 하나로)
+- [x] `app-ads.txt` 업로드 완료 — `https://nanabox.co.kr/app-ads.txt` (내용: `google.com, pub-3079888946602647, DIRECT, f08c47fec0942fa0`). 도메인 하나로 NO.1·NO.2·Android·iOS 모두 커버. ⏳ AdMob 크롤링·승인 대기 중 (NO.1 iOS 도 이 승인 완료 시점에 정상화됨).
 
 ### App Store Connect
 - [ ] 앱 생성
