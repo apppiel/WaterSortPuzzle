@@ -149,26 +149,31 @@ namespace WaterSortPuzzle.Game
         }
 
         // 보상형 광고를 표시한다.
-        // onRewarded: 광고가 닫힌 후 보상이 확정되었을 때 호출 (리셋 실행)
+        // onRewarded: 광고가 닫히면 호출 (리셋 실행)
         // onFailed: 광고가 없거나 로드 중일 때 호출
+        //
+        // 정책: 광고가 닫히면 유저가 스킵했든 끝까지 봤든 무조건 onRewarded 호출.
+        //   이전엔 리워드 콜백에서 `earned` 플래그를 세워서 close 시점에 체크했으나
+        //   실기(갤럭시)에서 리워드 콜백이 close 이벤트보다 늦게 오거나 아예 안 와서
+        //   광고 다 봐도 리셋 안 되고 두 번째 클릭에서만 되는 버그가 있었음 (2026-07-16 확인).
+        //   HandleReset 의 "광고 실패 → 리셋 실행" 원칙과 동일 —
+        //   유저의 클릭 의도가 광고 시청 여부보다 우선한다.
         public void ShowRewarded(Action onRewarded, Action onFailed = null)
         {
             if (_rewardedAd != null && _rewardedAd.CanShowAd())
             {
-                bool earned = false;
-
                 void OnClosed()
                 {
                     _rewardedAd.OnAdFullScreenContentClosed -= OnClosed;
                     // AdMob이 광고 중 일시정지한 게임을 반드시 재개한다
                     UnityEngine.Time.timeScale = 1f;
                     LoadRewarded();
-                    if (earned) onRewarded?.Invoke();
+                    onRewarded?.Invoke();
                 }
 
                 _rewardedAd.OnAdFullScreenContentClosed += OnClosed;
-                // 보상 획득 시점(광고 완료)에 플래그만 세운다 — 실제 실행은 광고 닫힌 후
-                _rewardedAd.Show(_ => earned = true);
+                // AdMob API 요구사항: Show 는 반드시 Action<Reward> 콜백 인자를 받는다 (미사용)
+                _rewardedAd.Show(_ => { });
             }
             else
             {
