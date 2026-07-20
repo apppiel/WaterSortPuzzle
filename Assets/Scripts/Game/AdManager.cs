@@ -1,6 +1,10 @@
 using System;
 using UnityEngine;
 using GoogleMobileAds.Api;
+#if UNITY_IOS
+using System.Runtime.InteropServices;
+using AOT;
+#endif
 
 namespace WaterSortPuzzle.Game
 {
@@ -10,6 +14,28 @@ namespace WaterSortPuzzle.Game
     {
         // 싱글턴 인스턴스
         public static AdManager Instance { get; private set; }
+
+#if UNITY_IOS
+        // ATTBridge.mm 의 네이티브 함수. iOS 14+ 광고 personalization 승인 요청.
+        // Apple 정책상 AdMob 초기화 전에 반드시 호출되어야 한다.
+        private delegate void ATTCallback(int status);
+        [DllImport("__Internal")]
+        private static extern void _RequestATTPermission(ATTCallback callback);
+
+        // P/Invoke 콜백은 인스턴스 캡처가 불가하므로 static 인스턴스 참조로 우회.
+        private static AdManager _iosInstance;
+
+        [MonoPInvokeCallback(typeof(ATTCallback))]
+        private static void OnATTComplete(int status)
+        {
+            // ATT 결과와 무관하게 AdMob 초기화는 진행 (거부돼도 non-personalized 광고는 서빙됨)
+            MobileAds.Initialize(_ =>
+            {
+                _iosInstance.LoadInterstitial();
+                _iosInstance.LoadRewarded();
+            });
+        }
+#endif
 
         // Google 공식 테스트 광고 ID (Development Build 전용)
         private const string TestInterstitialId = "ca-app-pub-3940256099942544/1033173712";
@@ -58,11 +84,18 @@ namespace WaterSortPuzzle.Game
             _interstitialAdUnitId = Debug.isDebugBuild ? TestInterstitialId : RealInterstitialId;
             _rewardedAdUnitId     = Debug.isDebugBuild ? TestRewardedId     : RealRewardedId;
 
+#if UNITY_IOS && !UNITY_EDITOR
+            // iOS 실기: ATT 권한 팝업 먼저, 응답 후 콜백에서 AdMob 초기화.
+            // Editor 는 네이티브 함수 없으므로 아래 else 브랜치로 폴백해 EntryPointNotFoundException 회피.
+            _iosInstance = this;
+            _RequestATTPermission(OnATTComplete);
+#else
             MobileAds.Initialize(_ =>
             {
                 LoadInterstitial();
                 LoadRewarded();
             });
+#endif
         }
 
         // 전면 광고를 미리 로드한다.

@@ -7,20 +7,22 @@
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:776593584361:android:892a6a68354615da110078",
+        "mobilesdk_app_id": "1:776593584361:ios:a5996679db1c655a110078",
         "android_client_info": {
           "package_name": "com.nanabox.watersortpuzzle"
         }
       },
-      "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyB5tWSMYwhjfLcKh8Y2M63HyIRIyYmVmKs"
+          "current_key": "AIzaSyCMzNEYs9WcfEVQsQOCUfcUN58yUf63c9E"
         }
       ],
       "services": {
+        "analytics_service": {
+          "status": 0
+        },
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "status": 1
         }
       }
     }
