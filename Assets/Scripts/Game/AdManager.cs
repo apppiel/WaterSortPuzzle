@@ -196,6 +196,13 @@ namespace WaterSortPuzzle.Game
             // 1. 유저 액션 즉시 실행 (씬 리로드는 이번 프레임 끝에 실제 반영)
             onRewarded?.Invoke();
 
+#if UNITY_EDITOR
+            // Editor 는 AdMob 시뮬레이터가 씬 전환과 충돌해 input lock 을 유발 →
+            // 리셋만 실행하고 광고는 skip. 실기(iOS/Android)엔 영향 없음.
+            LoadRewarded();
+            return;
+#endif
+
             // 2. 그 위에 광고 표시. AdMob 이벤트에 의존하지 않으니 콜백 트래킹 불필요.
             //    광고 닫히면 다음 광고 로드만 하면 됨.
             if (_rewardedAd != null && _rewardedAd.CanShowAd())

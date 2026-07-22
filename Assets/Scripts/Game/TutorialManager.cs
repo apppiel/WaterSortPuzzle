@@ -26,12 +26,26 @@ namespace WaterSortPuzzle.Game
         // 유저가 정확히 이 인덱스의 튜브를 눌렀을 때만 손을 이동시킨다.
         // 예전엔 아무 튜브나 누르면 손이 움직여 "왜 저기로 가지?" 하는 혼란이 있었다.
         private int _fromIdx;
+        // TO 튜브 인덱스. state 1 에서 유저가 이 튜브만 누를 수 있게 강제한다.
+        private int _toIdx;
 
         // 상태 머신
         //   0 = FROM 튜브 클릭 대기 (손이 FROM 위에서 pulse)
         //   1 = 유저가 첫 튜브 선택 → 손이 TO 로 이동, pour 대기
         //   2 = pour 완료, 손 사라짐
         private int _state;
+
+        // GameManager 가 클릭 처리 전에 호출한다. 튜토리얼 진행 중이면 이 값만 허용.
+        // state 0 → FROM, state 1 → TO, state 2 → null (튜토리얼 종료, 자유 조작).
+        public int? RequiredTubeIndex
+        {
+            get
+            {
+                if (_state == 0) return _fromIdx;
+                if (_state == 1) return _toIdx;
+                return null;
+            }
+        }
 
         // 손 크기 (튜브 대비 적절한 비율)
         private const float HandScale = 0.6f;
@@ -41,9 +55,10 @@ namespace WaterSortPuzzle.Game
         // 튜토리얼 시작. GameManager 에서 호출.
         //   handSprite : 손 스프라이트 (Cursor_Hand3 등)
         //   fromIdx    : 유저가 처음 눌러야 할 튜브의 인덱스 (매칭 검증용)
+        //   toIdx      : 유저가 두 번째로 눌러야 할 튜브의 인덱스 (매칭 검증용)
         //   fromTube   : 그 튜브의 Transform (손 초기 위치)
         //   toTube     : 유저가 두 번째로 눌러야 할 튜브의 Transform
-        public void StartTutorial(Sprite handSprite, int fromIdx, Transform fromTube, Transform toTube)
+        public void StartTutorial(Sprite handSprite, int fromIdx, int toIdx, Transform fromTube, Transform toTube)
         {
             if (handSprite == null || fromTube == null || toTube == null)
             {
@@ -53,6 +68,7 @@ namespace WaterSortPuzzle.Game
             }
 
             _fromIdx = fromIdx;
+            _toIdx   = toIdx;
             _toTube  = toTube;
 
             // 자식 GameObject 에 SpriteRenderer 를 붙여 손 아이콘 생성

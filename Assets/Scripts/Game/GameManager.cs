@@ -170,6 +170,7 @@ namespace WaterSortPuzzle.Game
                 _tutorial = tutGo.AddComponent<TutorialManager>();
                 _tutorial.StartTutorial(_tutorialHandSprite,
                                         fromIdx: 1,
+                                        toIdx:   3,
                                         fromTube: _tubeViews[1].transform,
                                         toTube:   _tubeViews[3].transform);
             }
@@ -182,9 +183,14 @@ namespace WaterSortPuzzle.Game
             _remainingUndos = MaxUndoCount;
 
             // Analytics: 레벨 시작 이벤트. level 파라미터는 1-based (게임 UI 표기와 일치).
+            // Editor 는 Firebase 네이티브 라이브러리 미탑재라 예외 발생 가능 → 흐름 끊지 않도록 감싼다.
             _levelStartTime = Time.time;
-            FirebaseAnalytics.LogEvent("level_start",
-                new Parameter("level", _currentLevelIndex + 1));
+            try
+            {
+                FirebaseAnalytics.LogEvent("level_start",
+                    new Parameter("level", _currentLevelIndex + 1));
+            }
+            catch (System.Exception e) { Debug.LogWarning($"[Analytics] level_start skip: {e.Message}"); }
         }
 
         // 매 프레임 호출된다. 터치 및 마우스 클릭 입력을 처리한다.
@@ -217,6 +223,14 @@ namespace WaterSortPuzzle.Game
         // 첫 클릭: 튜브 선택 / 두 번째 클릭: 붓기 시도 / 같은 튜브 재클릭: 선택 해제
         private void HandleTubeClicked(int index)
         {
+            // 튜토리얼 진행 중에는 힌트한 튜브 이외는 무반응 (state 0=FROM, state 1=TO).
+            // 유저가 힌트 무시하고 다른 조합으로 pour 성공해 튜토리얼이 조기 종료되던 이슈 fix.
+            if (_tutorial != null)
+            {
+                int? req = _tutorial.RequiredTubeIndex;
+                if (req.HasValue && index != req.Value) return;
+            }
+
             if (_selectedIndex == -1)
             {
                 // 아무것도 선택 안 된 상태: 빈 튜브는 선택 불가
@@ -349,10 +363,15 @@ namespace WaterSortPuzzle.Game
         {
             // Analytics: 레벨 클리어 이벤트. 시작~클리어 소요 시간(초)까지 기록.
             // 어느 레벨이 너무 어려운지/쉬운지 판단 근거로 사용.
+            // Editor 는 Firebase 네이티브 라이브러리 미탑재 → 예외 시 팝업 표시가 막히지 않도록 감싼다.
             long durationSec = (long)(Time.time - _levelStartTime);
-            FirebaseAnalytics.LogEvent("level_clear",
-                new Parameter("level", _currentLevelIndex + 1),
-                new Parameter("duration_sec", durationSec));
+            try
+            {
+                FirebaseAnalytics.LogEvent("level_clear",
+                    new Parameter("level", _currentLevelIndex + 1),
+                    new Parameter("duration_sec", durationSec));
+            }
+            catch (System.Exception e) { Debug.LogWarning($"[Analytics] level_clear skip: {e.Message}"); }
 
             // 마지막 레벨이면 리워드 코드 발급 시작.
             // 클리어 연출과 병렬로 진행되므로 유저가 팝업 볼 때쯤 응답이 도착한다.

@@ -74,7 +74,9 @@ namespace WaterSortPuzzle.Game
                     OnCodeIssued?.Invoke(existing, "이미 발급된 코드입니다", true);
                     Debug.Log("[RewardManager] 기존 코드 재사용: " + existing);
                     // Analytics: 재발급 케이스. is_reissue=1 로 신규와 구분.
-                    FirebaseAnalytics.LogEvent("reward_issued", new Parameter("is_reissue", 1));
+                    // Editor 는 Firebase 네이티브 미탑재 → 예외 시 리워드 발급 흐름이 끊기지 않게 감싼다.
+                    try { FirebaseAnalytics.LogEvent("reward_issued", new Parameter("is_reissue", 1)); }
+                    catch (System.Exception e) { Debug.LogWarning($"[Analytics] reward_issued skip: {e.Message}"); }
                     return;
                 }
 
@@ -104,7 +106,9 @@ namespace WaterSortPuzzle.Game
                         OnCodeIssued?.Invoke(newCode, "코드가 발급되었습니다!", false);
                         Debug.Log("[RewardManager] 새 코드 발급 성공: " + newCode);
                         // Analytics: 신규 발급 케이스. 총 발급 수를 이걸로 카운트.
-                        FirebaseAnalytics.LogEvent("reward_issued", new Parameter("is_reissue", 0));
+                        // Editor 는 Firebase 네이티브 미탑재 → 예외 시 리워드 발급 흐름이 끊기지 않게 감싼다.
+                        try { FirebaseAnalytics.LogEvent("reward_issued", new Parameter("is_reissue", 0)); }
+                        catch (System.Exception e) { Debug.LogWarning($"[Analytics] reward_issued skip: {e.Message}"); }
                     }
                     else
                     {

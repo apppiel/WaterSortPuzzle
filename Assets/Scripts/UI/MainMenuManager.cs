@@ -45,6 +45,11 @@ namespace WaterSortPuzzle.UI
         {
             AddEffectIfMissing(_playButton);
             AddEffectIfMissing(_settingsButton);
+            // 텍스트("PLAY"/"SETTING") 가 버튼 오브젝트(아이콘 사각형) 바깥에 배치돼 있어
+            // 텍스트를 눌러도 반응이 없던 이슈. 자식 TMP 텍스트에 Button 을 하나 더 붙이고
+            // 동일한 onClick 을 연결해 클릭 영역을 확장한다. 씬 구조는 그대로 유지.
+            ExpandClickToText(_playButton, OnPlayButtonClicked);
+            ExpandClickToText(_settingsButton, OnSettingsButtonClicked);
         }
 
         private void AddEffectIfMissing(RectTransform target)
@@ -52,6 +57,34 @@ namespace WaterSortPuzzle.UI
             if (target == null) return;
             if (target.GetComponent<UIButtonEffect>() == null)
                 target.gameObject.AddComponent<UIButtonEffect>();
+        }
+
+        // 자식 텍스트 위에 큰 투명 Image + Button 을 씌워 클릭 영역을 넓힌다.
+        // 텍스트 rect 자체 (예: 200x50) 는 손가락 터치엔 좁아서, 텍스트 rect 를
+        // stretch 로 채우고 상하좌우 여백만큼 offset 확장한 자식을 별도로 만든다.
+        private void ExpandClickToText(RectTransform button, UnityEngine.Events.UnityAction onClick)
+        {
+            if (button == null) return;
+            var tmp = button.GetComponentInChildren<TMP_Text>(true);
+            if (tmp == null) return;
+            if (tmp.transform.Find("ClickArea") != null) return; // 중복 방지
+
+            var go = new GameObject("ClickArea", typeof(RectTransform), typeof(Image), typeof(Button));
+            var rect = go.GetComponent<RectTransform>();
+            rect.SetParent(tmp.transform, worldPositionStays: false);
+            rect.SetAsFirstSibling(); // 텍스트가 위에 렌더링되도록 자식 순서를 앞에
+            rect.anchorMin = Vector2.zero;
+            rect.anchorMax = Vector2.one;
+            rect.offsetMin = new Vector2(-80f, -60f);
+            rect.offsetMax = new Vector2( 80f,  60f);
+
+            var img = go.GetComponent<Image>();
+            img.color = new Color(1f, 1f, 1f, 0f); // 완전 투명
+            img.raycastTarget = true;
+
+            var btn = go.GetComponent<Button>();
+            btn.onClick.AddListener(onClick);
+            AddEffectIfMissing(rect);
         }
 
         // 화면 진입 시 버튼들이 페이드 인 + 스케일 인으로 등장한다
