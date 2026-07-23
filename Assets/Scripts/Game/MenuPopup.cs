@@ -95,7 +95,7 @@ namespace WaterSortPuzzle.Game
             _panel = panelGo.AddComponent<RectTransform>();
             _panel.sizeDelta       = new Vector2(700f, 360f);
             _panel.anchoredPosition = Vector2.zero;
-            panelGo.AddComponent<Image>().color = Color.white;
+            PopupHelpers.AddRoundedImage(panelGo, Color.white);
 
             // ── 두 개의 버튼 (좌: 레벨선택 / 우: 계속하기) ─────
             // 좌: 라이트 핑크 (보조)
@@ -119,7 +119,7 @@ namespace WaterSortPuzzle.Game
             var rect = btnGo.AddComponent<RectTransform>();
             rect.sizeDelta       = new Vector2(290f, 110f);
             rect.anchoredPosition = pos;
-            btnGo.AddComponent<Image>().color = bgColor;
+            PopupHelpers.AddRoundedImage(btnGo, bgColor);
             var btn = btnGo.AddComponent<Button>();
             btn.onClick.AddListener(() => onClick());
 

@@ -191,6 +191,15 @@ namespace WaterSortPuzzle.Game
                     new Parameter("level", _currentLevelIndex + 1));
             }
             catch (System.Exception e) { Debug.LogWarning($"[Analytics] level_start skip: {e.Message}"); }
+
+            // 인게임 → 메뉴 → 레벨선택 경로로 나왔던 경우 예약된 광고를 1회 소비한다.
+            // ShowRewarded 는 콜백을 광고보다 먼저 실행하는 구조인데 여기선 소비 자체가 목적이라 no-op.
+            // AdManager.Instance 는 위쪽 Start 초입에서 생성 보장됨.
+            if (AdManager.PendingRewardedOnLevelEnter)
+            {
+                AdManager.PendingRewardedOnLevelEnter = false;
+                AdManager.Instance?.ShowRewarded(() => { });
+            }
         }
 
         // 매 프레임 호출된다. 터치 및 마우스 클릭 입력을 처리한다.
@@ -391,17 +400,28 @@ namespace WaterSortPuzzle.Game
         }
 
         // 메뉴 팝업 오브젝트를 생성하고 초기화한다.
-        // 레벨선택 버튼 → 즉시 레벨선택 씬 이동 (광고 없음)
+        // 레벨선택 버튼 → LS 씬으로 이동. 진행 중(첫 pour 이후)이었다면 플래그를 세팅해
+        //   다음 게임 씬 진입 시 광고 1회 노출되도록 예약 (허점 차단).
         // 계속하기 버튼 → 팝업 닫고 게임 재개 (Hide 애니메이션 완료 후 콜백)
         private void BuildMenuPopup()
         {
             var go = new GameObject("MenuPopup");
             _menuPopup = go.AddComponent<MenuPopup>();
             _menuPopup.Init(
-                onLevelSelect: () => SceneLoader.LoadLevelSelect(),
+                onLevelSelect: HandleMenuLevelSelect,
                 onContinue:    () => _isPaused = false,
                 font: koreanFont
             );
+        }
+
+        // 메뉴에서 "레벨선택" 을 눌렀을 때. 진행 중이면 다음 레벨 진입 시 광고를 표시하도록 예약.
+        // 게이팅 위치를 LS→Game 진입 시점으로 미루는 이유: 어느 레벨로 가든 재진입 시 광고가 붙어
+        // "메뉴 나가서 아무 레벨이나 골라 리셋" 우회를 원천 차단.
+        private void HandleMenuLevelSelect()
+        {
+            if (_resetButton != null && _resetButton.interactable)
+                AdManager.PendingRewardedOnLevelEnter = true;
+            SceneLoader.LoadLevelSelect();
         }
 
         // 리워드 매니저 + 리워드 팝업을 함께 생성하고 이벤트를 연결한다.

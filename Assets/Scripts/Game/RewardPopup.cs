@@ -124,7 +124,7 @@ namespace WaterSortPuzzle.Game
       _panel = panelGo.AddComponent<RectTransform>();
       _panel.sizeDelta = new Vector2(820f, 780f);
       _panel.anchoredPosition = Vector2.zero;
-      panelGo.AddComponent<Image>().color = Color.white;
+      PopupHelpers.AddRoundedImage(panelGo, Color.white);
 
       // ── 타이틀 ──────────────────────────────────────────
       // #FF8C8C : 브랜드 딥 핑크
@@ -145,7 +145,7 @@ namespace WaterSortPuzzle.Game
       codeBoxRect.sizeDelta = new Vector2(700f, 160f);
       codeBoxRect.anchoredPosition = new Vector2(0f, 40f);
       // #FFEBEB : 라이트 핑크보다 더 연한 배경 (강조된 코드를 위한 안정된 배경)
-      codeBoxGo.AddComponent<Image>().color = new Color(1f, 0.922f, 0.922f, 1f);
+      PopupHelpers.AddRoundedImage(codeBoxGo, new Color(1f, 0.922f, 0.922f, 1f));
 
       // #3D1E5E 딥 플럼: 라이트 핑크 배경과 보색 대비로 리워드 프리미엄 느낌.
       var codeGo = CreateText(codeBoxGo.transform, "----" + "-" + "----", 82f,
@@ -203,7 +203,7 @@ namespace WaterSortPuzzle.Game
       var rect = btnGo.AddComponent<RectTransform>();
       rect.sizeDelta = new Vector2(310f, 120f);
       rect.anchoredPosition = pos;
-      btnGo.AddComponent<Image>().color = bgColor;
+      PopupHelpers.AddRoundedImage(btnGo, bgColor);
       var btn = btnGo.AddComponent<Button>();
       btn.onClick.AddListener(() => onClick());
 

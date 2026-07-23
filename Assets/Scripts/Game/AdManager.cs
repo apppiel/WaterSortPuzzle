@@ -15,6 +15,12 @@ namespace WaterSortPuzzle.Game
         // 싱글턴 인스턴스
         public static AdManager Instance { get; private set; }
 
+        // 인게임 → 메뉴 → 레벨선택으로 나갈 때(pour 이력 있는 경우) True 로 설정된다.
+        // 다음 게임 씬 진입 시 GameManager.Start 에서 소비되어 보상형 광고 1회 표시.
+        // process 스코프(static) → 앱 재시작 시 자연스럽게 리셋됨. PlayerPrefs 아님.
+        // 목적: 메뉴→레벨선택→같은 레벨 재진입으로 리셋 광고를 우회하는 허점 차단.
+        public static bool PendingRewardedOnLevelEnter { get; set; }
+
 #if UNITY_IOS
         // ATTBridge.mm 의 네이티브 함수. iOS 14+ 광고 personalization 승인 요청.
         // Apple 정책상 AdMob 초기화 전에 반드시 호출되어야 한다.

@@ -89,7 +89,7 @@ namespace WaterSortPuzzle.Game
       _panel = panelGo.AddComponent<RectTransform>();
       _panel.sizeDelta = new Vector2(700f, 480f);
       _panel.anchoredPosition = Vector2.zero;
-      panelGo.AddComponent<Image>().color = Color.white;
+      PopupHelpers.AddRoundedImage(panelGo, Color.white);
 
       // ── 클리어 타이틀 ────────────────────────────────────
       // #FF8A8A : 흰 배경에서 잘 보이도록 딥 핑크 사용
@@ -137,7 +137,7 @@ namespace WaterSortPuzzle.Game
       var rect = btnGo.AddComponent<RectTransform>();
       rect.sizeDelta = new Vector2(290f, 110f);
       rect.anchoredPosition = pos;
-      btnGo.AddComponent<Image>().color = bgColor;
+      PopupHelpers.AddRoundedImage(btnGo, bgColor);
       var btn = btnGo.AddComponent<Button>();
       btn.onClick.AddListener(() => onClick());
 
